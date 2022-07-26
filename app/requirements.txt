@@ -1,0 +1,10 @@
+# Python libraries will be installed when container is built
+# pip install -r requirements.txt
+
+# Slack API
+slackclient>=1.1.0
+slackeventsapi
+
+# Python etc.
+python-dotenv
+flask

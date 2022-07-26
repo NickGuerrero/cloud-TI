@@ -1,0 +1,9 @@
+version: "3"
+services:
+    python:
+        container_name: standard-backend
+        build:
+            context: app
+            dockerfile: app.Dockerfile
+        ports:
+            - "80:80"
