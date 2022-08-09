@@ -7,3 +7,5 @@ services:
             dockerfile: app.Dockerfile
         ports:
             - "80:80"
+        volumes:
+            - ./app:/app
