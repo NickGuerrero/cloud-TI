@@ -26,13 +26,8 @@ def event_test(body, say):
         say("Hello <@" + user_id + ">!")
 
 
-
-
-
-
-
 #Creates home app
-#must subscribe to the app_home_opened event
+#must subscribe to app_home_opened event
 @app.event("app_home_opened")
 def update_home_tab(client, event, logger):
     try:
@@ -105,7 +100,7 @@ def update_home_tab(client, event, logger):
         logger.error(f"Error publishing home tab: {e}")
 
 
-
+@app.shortcut("find_resources")
 @app.action("resource-button")
 def open_resource_modal(ack, body, client):
     ack()
@@ -245,189 +240,188 @@ def open_resource_modal(ack, body, client):
 
 
 
-
+@app.shortcut("find_group")
 @app.action("group-button")
-def open_group_modal(ack, body, client):
+def open_modal(ack, body, client):
     ack()
-    print("GROUP BUTTON PRESSED")
     client.views_open(
         trigger_id=body["trigger_id"],
         view={
-	"type": "modal",
-	"title": {
-		"type": "plain_text",
-		"text": "My App",
-	},
-	"submit": {
-		"type": "plain_text",
-		"text": "Submit",
-	},
-	"close": {
-		"type": "plain_text",
-		"text": "Cancel",
-	},
-	"blocks": [
-		{
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": "This is a header block",
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Group Size"
-			},
-			"accessory": {
-				"type": "static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select an item",
-				},
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "2",
-						},
-						"value": "value-0"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "3",
-						},
-						"value": "value-1"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "4",
-						},
-						"value": "value-2"
-					}
-				],
-				"action_id": "static_select-action"
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Meeting Type"
-			},
-			"accessory": {
-				"type": "static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select an item",
-				},
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Mock Interview",
-						},
-						"value": "value-0"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Group Problem Solving",
-						},
-						"value": "value-1"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Resume Review",
-						},
-						"value": "value-2"
-					}
-				],
-				"action_id": "static_select-action"
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Topic"
-			},
-			"accessory": {
-				"type": "static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select an item",
-				},
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Data Types",
-						},
-						"value": "value-0"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Loops",
-						},
-						"value": "value-1"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Arrays",
-						},
-						"value": "value-2"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Algorithms",
-						},
-						"value": "value-2"
-					}
-				],
-				"action_id": "static_select-action"
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Group Type"
-			},
-			"accessory": {
-				"type": "static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select an item",
-				},
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Dynamic",
-						},
-						"value": "value-0"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Fixed",
-						},
-						"value": "value-1"
-					}
-				],
-				"action_id": "static_select-action"
-			}
-		}
-	]
-}
+            "type": "modal",
+            "title": {
+                "type": "plain_text",
+                "text": "My App",
+            },
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit",
+            },
+            "close": {
+                "type": "plain_text",
+                "text": "Cancel",
+            },
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "This is a header block",
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Group Size"
+                    },
+                    "accessory": {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select an item",
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "2",
+                                },
+                                "value": "value-0"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "3",
+                                },
+                                "value": "value-1"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "4",
+                                },
+                                "value": "value-2"
+                            }
+                        ],
+                        "action_id": "static_select-action"
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Meeting Type"
+                    },
+                    "accessory": {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select an item",
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Mock Interview",
+                                },
+                                "value": "value-0"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Group Problem Solving",
+                                },
+                                "value": "value-1"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Resume Review",
+                                },
+                                "value": "value-2"
+                            }
+                        ],
+                        "action_id": "static_select-action"
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Topic"
+                    },
+                    "accessory": {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select an item",
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Data Types",
+                                },
+                                "value": "value-0"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Loops",
+                                },
+                                "value": "value-1"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Arrays",
+                                },
+                                "value": "value-2"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Algorithms",
+                                },
+                                "value": "value-2"
+                            }
+                        ],
+                        "action_id": "static_select-action"
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Group Type"
+                    },
+                    "accessory": {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select an item",
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Dynamic",
+                                },
+                                "value": "value-0"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Fixed",
+                                },
+                                "value": "value-1"
+                            }
+                        ],
+                        "action_id": "static_select-action"
+                    }
+                }
+            ]
+        }
     )
 
 
