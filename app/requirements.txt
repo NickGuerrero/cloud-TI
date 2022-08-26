@@ -4,6 +4,7 @@
 # Slack API
 slackclient>=1.1.0
 slackeventsapi
+slack_bolt
 
 # Python etc.
 python-dotenv
