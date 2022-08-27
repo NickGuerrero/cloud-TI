@@ -1,3 +1,5 @@
+#put modals in separate files
+
 from ctypes import create_string_buffer
 import os
 from slack_bolt import App
@@ -35,20 +37,78 @@ def update_home_tab(client, event, logger):
             # Use the user ID associated with the event
             user_id=event["user"],
             view={
+                
                 "type": "home",
                 "blocks": [
                     {
                         "type": "header",
                         "text": {
                             "type": "plain_text",
-                            "text": "Welcome Home",
+                            "text": "CTI Accelerate Homepage"
                         }
                     },
                     {
                         "type": "section",
                         "text": {
                             "type": "plain_text",
-                            "text": "Homepage for resources and workshopping",
+                            "text": "Welcome to the CTI homepage! Here, you can find links to resources and find a group to work with."
+                        }
+                    },
+                    {
+                        "type": "divider"
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "Access the student handbook"
+                        },
+                        "accessory": {
+                            "type": "button",
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Handbook",
+                                "emoji": true
+                            },
+                            "value": "click_me_1",
+                            "url": "https://bit.ly/Accelerate-Student-Handbook",
+                            "action_id": "button-action"
+                        }
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "Access the CTI Canvas Site"
+                        },
+                        "accessory": {
+                            "type": "button",
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Canvas",
+                                "emoji": true
+                            },
+                            "value": "click_me_2",
+                            "url": "https://cti-courses.instructure.com/",
+                            "action_id": "button-action"
+                        }
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "Access Deep Work schedule and Links"
+                        },
+                        "accessory": {
+                            "type": "button",
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Deep Work",
+                                "emoji": true
+                            },
+                            "value": "click_me_3",
+                            "url": "https://docs.google.com/spreadsheets/d/1C8FLUGrIDRXRkBgvDsNOmqwcW4go4QwfNOxoytjDvEk/edit#gid=0",
+                            "action_id": "button-action"
                         }
                     },
                     {
@@ -58,22 +118,22 @@ def update_home_tab(client, event, logger):
                         "type": "header",
                         "text": {
                             "type": "plain_text",
-                            "text": "This is a header block",
+                            "text": "Personalized Functionalities"
                         }
                     },
                     {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "Homework/general coding assistance"
+                            "text": "Homework/General Coding Assistance"
                         },
                         "accessory": {
                             "type": "button",
                             "text": {
                                 "type": "plain_text",
-                                "text": "Find Resources",
+                                "text": "Find Resources"
                             },
-                            "value": "click_me_123",
+                            "value": "click_me_1234",
                             "action_id": "resource-button"
                         }
                     },
@@ -87,11 +147,14 @@ def update_home_tab(client, event, logger):
                             "type": "button",
                             "text": {
                                 "type": "plain_text",
-                                "text": "Find A Group",
+                                "text": "Find A Group"
                             },
                             "value": "click_me_123",
                             "action_id": "group-button"
                         }
+                    },
+                    {
+                        "type": "divider"
                     }
                 ]
             }
@@ -100,7 +163,6 @@ def update_home_tab(client, event, logger):
         logger.error(f"Error publishing home tab: {e}")
 
 
-@app.shortcut("find_resources")
 @app.action("resource-button")
 def open_resource_modal(ack, body, client):
     ack()
@@ -239,8 +301,6 @@ def open_resource_modal(ack, body, client):
     )
 
 
-
-@app.shortcut("find_group")
 @app.action("group-button")
 def open_modal(ack, body, client):
     ack()
@@ -250,23 +310,34 @@ def open_modal(ack, body, client):
             "type": "modal",
             "title": {
                 "type": "plain_text",
-                "text": "My App",
+                "text": "My App"
             },
             "submit": {
                 "type": "plain_text",
-                "text": "Submit",
+                "text": "Submit"
             },
             "close": {
                 "type": "plain_text",
-                "text": "Cancel",
+                "text": "Cancel"
             },
             "blocks": [
                 {
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": "This is a header block",
+                        "text": "Find a Group"
                     }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Find a group to work together during today's session",
+                        "emoji": true
+                    }
+                },
+                {
+                    "type": "divider"
                 },
                 {
                     "type": "section",
@@ -278,27 +349,27 @@ def open_modal(ack, body, client):
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select an item",
+                            "text": "Select an item"
                         },
                         "options": [
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "2",
+                                    "text": "2"
                                 },
                                 "value": "value-0"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "3",
+                                    "text": "3"
                                 },
                                 "value": "value-1"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "4",
+                                    "text": "4"
                                 },
                                 "value": "value-2"
                             }
@@ -316,27 +387,27 @@ def open_modal(ack, body, client):
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select an item",
+                            "text": "Select an item"
                         },
                         "options": [
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Mock Interview",
+                                    "text": "Mock Interview"
                                 },
                                 "value": "value-0"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Group Problem Solving",
+                                    "text": "Group Problem Solving"
                                 },
                                 "value": "value-1"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Resume Review",
+                                    "text": "Resume Review"
                                 },
                                 "value": "value-2"
                             }
@@ -348,40 +419,40 @@ def open_modal(ack, body, client):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "Topic"
+                        "text": "Pick A Topic To Focus On"
                     },
                     "accessory": {
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select an item",
+                            "text": "Select an item"
                         },
                         "options": [
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Data Types",
+                                    "text": "Data Types"
                                 },
                                 "value": "value-0"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Loops",
+                                    "text": "Loops"
                                 },
                                 "value": "value-1"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Arrays",
+                                    "text": "Arrays"
                                 },
                                 "value": "value-2"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Algorithms",
+                                    "text": "Algorithms"
                                 },
                                 "value": "value-2"
                             }
@@ -399,20 +470,20 @@ def open_modal(ack, body, client):
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select an item",
+                            "text": "Select an item"
                         },
                         "options": [
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Dynamic",
+                                    "text": "Dynamic (new students may join anytime during the session)"
                                 },
                                 "value": "value-0"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Fixed",
+                                    "text": "Fixed (Group size never changes)"
                                 },
                                 "value": "value-1"
                             }
