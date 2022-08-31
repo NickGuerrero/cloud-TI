@@ -464,7 +464,7 @@ def open_modal(ack, body, client):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "Group Type"
+                        "text": "Meeting Size"
                     },
                     "accessory": {
                         "type": "static_select",
@@ -476,16 +476,23 @@ def open_modal(ack, body, client):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Dynamic (new students may join anytime during the session)"
+                                    "text": "2"
                                 },
-                                "value": "value-0"
+                                "value": "value-2"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Fixed (Group size never changes)"
+                                    "text": "3"
                                 },
-                                "value": "value-1"
+                                "value": "value-3"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "4"
+                                },
+                                "value": "value-4"
                             }
                         ],
                         "action_id": "static_select-action"
