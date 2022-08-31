@@ -6,6 +6,7 @@ from slack_bolt import App
 from dotenv import load_dotenv
 from pathlib import Path
 import random
+from multiprocessing.connection import Client
 
 # loads env variables
 env_path = Path('.') / '.env'
@@ -27,6 +28,32 @@ def event_test(body, say):
     else:
         say("Hello <@" + user_id + ">!")
 
+
+# Handle group-form submission
+HOST = '127.0.0.1' # Localhost
+PORT = 4000 # Port location of other program
+form = 0 # Form count
+@app.view("")
+def handle_view_events(ack, body, logger):
+    ack()
+    logger.info(body)
+
+# Check the payload
+
+# Add form data to the queue
+response = 0
+with Client((HOST, PORT), authkey=b'password') as conn:
+    conn.send(form)
+    response = conn.recv()
+
+# Send an acknowledgement
+if response > 0:
+    pass # Request processed
+else:
+    pass # Request not fulfilled
+
+
+# The queue will send messages on its own
 
 #Creates home app
 #must subscribe to app_home_opened event
