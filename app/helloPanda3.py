@@ -337,7 +337,7 @@ def open_modal(ack, body, client):
             "type": "modal",
             "title": {
                 "type": "plain_text",
-                "text": "My App"
+                "text": "Group Finder",
             },
             "submit": {
                 "type": "plain_text",
@@ -345,7 +345,7 @@ def open_modal(ack, body, client):
             },
             "close": {
                 "type": "plain_text",
-                "text": "Cancel"
+                "text": "Cancel",
             },
             "blocks": [
                 {
@@ -359,58 +359,15 @@ def open_modal(ack, body, client):
                     "type": "section",
                     "text": {
                         "type": "plain_text",
-                        "text": "Find a group to work together during today's session",
-                        "emoji": true
+                        "text": "Find a group to work together during today's session"
                     }
                 },
                 {
                     "type": "divider"
                 },
                 {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "Group Size"
-                    },
-                    "accessory": {
-                        "type": "static_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Select an item"
-                        },
-                        "options": [
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "2"
-                                },
-                                "value": "value-0"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "3"
-                                },
-                                "value": "value-1"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "4"
-                                },
-                                "value": "value-2"
-                            }
-                        ],
-                        "action_id": "static_select-action"
-                    }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "Meeting Type"
-                    },
-                    "accessory": {
+                    "type": "input",
+                    "element": {
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
@@ -422,33 +379,33 @@ def open_modal(ack, body, client):
                                     "type": "plain_text",
                                     "text": "Mock Interview"
                                 },
-                                "value": "value-0"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Group Problem Solving"
-                                },
-                                "value": "value-1"
+                                "value": "type-mock"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
                                     "text": "Resume Review"
                                 },
-                                "value": "value-2"
+                                "value": "type-resume"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Group Problem Solving"
+                                },
+                                "value": "type-solve"
                             }
                         ],
                         "action_id": "static_select-action"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Select A Meeting Type"
                     }
                 },
                 {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "Pick A Topic To Focus On"
-                    },
-                    "accessory": {
+                    "type": "input",
+                    "element": {
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
@@ -458,42 +415,42 @@ def open_modal(ack, body, client):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Data Types"
+                                    "text": "Data Types*"
                                 },
-                                "value": "value-0"
+                                "value": "topic-data"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
                                     "text": "Loops"
                                 },
-                                "value": "value-1"
+                                "value": "topic-loops"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
                                     "text": "Arrays"
                                 },
-                                "value": "value-2"
+                                "value": "topic-arrays"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
                                     "text": "Algorithms"
                                 },
-                                "value": "value-2"
+                                "value": "topic-algorithms"
                             }
                         ],
                         "action_id": "static_select-action"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Pick a Topic to Focus On"
                     }
                 },
                 {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "Meeting Size"
-                    },
-                    "accessory": {
+                    "type": "input",
+                    "element": {
                         "type": "static_select",
                         "placeholder": {
                             "type": "plain_text",
@@ -503,31 +460,29 @@ def open_modal(ack, body, client):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "2"
+                                    "text": "Dynamic (New students may join during session)"
                                 },
-                                "value": "value-2"
+                                "value": "value-0"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "3"
+                                    "text": "Fixed (Same members from start to end of session)"
                                 },
-                                "value": "value-3"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "4"
-                                },
-                                "value": "value-4"
+                                "value": "value-1"
                             }
                         ],
                         "action_id": "static_select-action"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Select a Group Type"
                     }
                 }
             ]
         }
     )
+
 
 
 # Starts app
