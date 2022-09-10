@@ -552,7 +552,7 @@ def open_modal(ack, body, client):
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "Select a Group Type"
+                        "text": "Select a Group Size"
                     }
                 }
             ]
