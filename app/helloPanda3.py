@@ -468,7 +468,7 @@ def open_modal(ack, body, client):
                                 "text": {
                                     "type": "plain_text",
                                     "text": "Fixed (Same members from start to end of session)"
-                                },
+                                }, 
                                 "value": "value-1"
                             }
                         ],
