@@ -9,3 +9,12 @@ services:
             - "3000:3000"
         volumes:
             - ./app:/app
+    python-queue:
+        container_name: group-queue
+        build:
+            context: app
+            dockerfile: queue.Dockerfile
+        ports:
+            - "4000:4000"
+        volumes:
+            - ./app:/app
