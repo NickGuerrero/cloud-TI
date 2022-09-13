@@ -28,32 +28,8 @@ def event_test(body, say):
     else:
         say("Hello <@" + user_id + ">!")
 
-
-# Handle group-form submission
-HOST = '127.0.0.1' # Localhost
-PORT = 4000 # Port location of other program
-form = 0 # Form count
-@app.view("")
-def handle_view_events(ack, body, logger):
-    ack()
-    logger.info(body)
-
-# Check the payload
-
-# Add form data to the queue
-response = 0
-with Client((HOST, PORT), authkey=b'password') as conn:
-    conn.send(form)
-    response = conn.recv()
-
-# Send an acknowledgement
-if response > 0:
-    pass # Request processed
-else:
-    pass # Request not fulfilled
-
-
-# The queue will send messages on its own
+######################################################
+#################################################
 
 #Creates home app
 #must subscribe to app_home_opened event
@@ -328,6 +304,33 @@ def open_resource_modal(ack, body, client):
     )
 
 
+######################################################
+'''
+# Handle group-form submission
+HOST = '127.0.0.1' # Localhost
+PORT = 4000 # Port location of other program
+form = 0 # Form count
+@app.view("")
+def handle_view_events(ack, body, logger):
+    ack()
+    logger.info(body)
+
+# Check the payload
+
+# Add form data to the queue
+response = 0
+with Client((HOST, PORT), authkey=b'password') as conn:
+    conn.send(form)
+    response = conn.recv()
+
+# Send an acknowledgement
+if response > 0:
+    pass # Request processed
+else:
+    pass # Request not fulfilled
+'''
+#################################################
+
 '''
 {
 "slack_id": String for user identification and messaging,
@@ -339,6 +342,7 @@ def open_resource_modal(ack, body, client):
 '''
 @app.view("group_view")
 def handle_submission(ack, body, client, view, logger):
+    # Collect form data
     group_dict = dict()
     group_dict["slack_id"] = body["user"]["id"]
     group_dict["meeting_type"] = view["state"]["values"]["meet_type"]["value"]
@@ -346,11 +350,20 @@ def handle_submission(ack, body, client, view, logger):
     group_dict["group_type"] = view["state"]["values"]["meet_size"]["value"]
     group_dict["topic"] = view["state"]["values"]["topic_type"]["value"]
     ack()
+    # Send data to queue and acknowledge
     try:
-        client.chat_postMessage(channel=group_dict["slack_id"], text="You will be placed in a group shortly")
+        HOST = '127.0.0.1'              # Localhost
+        PORT = 4000                     # Port location of other program
+        with Client((HOST, PORT), authkey=b'password') as conn:
+            conn.send(group_dict)
+            response = conn.recv()
+        if response > 0:
+            client.chat_postMessage(channel=group_dict["slack_id"], text="You will be placed in a group shortly")
+        else:
+            client.chat_postMessage(channel=group_dict["slack_id"], text="Something went wrong, please report this issue to @NicolasGuerrero")
     except Exception as e:
         logger.exception(f"Failed to post a message {e}")
-    return group_dict
+    # return group_dict
 
 
 

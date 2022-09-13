@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 # Assume the event listener and queue are on the same Docker instance
 HOST = "127.0.0.1"
 PORT = 4000
-TIMER = 300 # 5 minutes
+TIMER = 180 # 3 minutes
 MAX_TIME_LIMIT = 600 # 10 minutes
 
 # Create a server to handle user requests
@@ -86,6 +86,7 @@ while True:
             timer.terminate()
         
         # TODO: I'm expecting a Slack API error, fix so we can post messages
+        # TODO: Check if we can message multiple students at once instead of one at a time
         # After all requests received, return the results
         groups = SimpleGrouper.simple_group(list(queue))
         for group in groups:
