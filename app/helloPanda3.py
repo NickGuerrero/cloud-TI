@@ -28,9 +28,6 @@ def event_test(body, say):
     else:
         say("Hello <@" + user_id + ">!")
 
-######################################################
-#################################################
-
 #Creates home app
 #must subscribe to app_home_opened event
 @app.event("app_home_opened")
@@ -71,7 +68,7 @@ def update_home_tab(client, event, logger):
                             "text": {
                                 "type": "plain_text",
                                 "text": "Handbook",
-                                "emoji": true
+                                "emoji": True
                             },
                             "value": "click_me_1",
                             "url": "https://bit.ly/Accelerate-Student-Handbook",
@@ -89,7 +86,7 @@ def update_home_tab(client, event, logger):
                             "text": {
                                 "type": "plain_text",
                                 "text": "Canvas",
-                                "emoji": true
+                                "emoji": True
                             },
                             "value": "click_me_2",
                             "url": "https://cti-courses.instructure.com/",
@@ -107,7 +104,7 @@ def update_home_tab(client, event, logger):
                             "text": {
                                 "type": "plain_text",
                                 "text": "Deep Work",
-                                "emoji": true
+                                "emoji": True
                             },
                             "value": "click_me_3",
                             "url": "https://docs.google.com/spreadsheets/d/1C8FLUGrIDRXRkBgvDsNOmqwcW4go4QwfNOxoytjDvEk/edit#gid=0",
@@ -303,34 +300,6 @@ def open_resource_modal(ack, body, client):
         }
     )
 
-
-######################################################
-'''
-# Handle group-form submission
-HOST = '127.0.0.1' # Localhost
-PORT = 4000 # Port location of other program
-form = 0 # Form count
-@app.view("")
-def handle_view_events(ack, body, logger):
-    ack()
-    logger.info(body)
-
-# Check the payload
-
-# Add form data to the queue
-response = 0
-with Client((HOST, PORT), authkey=b'password') as conn:
-    conn.send(form)
-    response = conn.recv()
-
-# Send an acknowledgement
-if response > 0:
-    pass # Request processed
-else:
-    pass # Request not fulfilled
-'''
-#################################################
-
 '''
 {
 "slack_id": String for user identification and messaging,
@@ -345,10 +314,14 @@ def handle_submission(ack, body, client, view, logger):
     # Collect form data
     group_dict = dict()
     group_dict["slack_id"] = body["user"]["id"]
+    # This section breaks because the key "value" can't be found, TODO
+    # I'm inserting a print statement to check the log to see what's wrong
+    print(view["state"]["values"])
     group_dict["meeting_type"] = view["state"]["values"]["meet_type"]["value"]
     group_dict["meeting_size"] = view["state"]["values"]["meet_size"]["value"]
     group_dict["group_type"] = view["state"]["values"]["meet_size"]["value"]
     group_dict["topic"] = view["state"]["values"]["topic_type"]["value"]
+    ###################################################################
     ack()
     # Send data to queue and acknowledge
     try:

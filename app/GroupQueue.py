@@ -1,5 +1,3 @@
-# import
-from msilib.schema import Error
 import SimpleGrouper
 import GroupFormResponse
 from multiprocessing import Process, Queue
@@ -48,7 +46,7 @@ while True:
         queue = Queue()
         conn = listener.accept()
         msg = conn.recv()
-        if not is_user_request(msg) or is_command(msg): raise Error("Invalid message recieved")
+        if not is_user_request(msg) or is_command(msg): raise Exception("Invalid message recieved")
         if is_user_request(msg): queue.put(msg)
         
         # Process A: Listener, only ends on command
@@ -102,5 +100,5 @@ while True:
                 except SlackApiError as e:
                     print(f"Error: {e}")
 
-    except Error as e:
+    except Exception as e:
         print(e)
