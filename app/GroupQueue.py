@@ -1,5 +1,3 @@
-# import
-from msilib.schema import Error
 import SimpleGrouper
 import GroupFormResponse
 from multiprocessing import Process, Queue
@@ -36,7 +34,7 @@ logger = logging.getLogger(__name__)
 # Assume the event listener and queue are on the same Docker instance
 HOST = "127.0.0.1"
 PORT = 4000
-TIMER = 300 # 5 minutes
+TIMER = 180 # 3 minutes
 MAX_TIME_LIMIT = 600 # 10 minutes
 
 # Create a server to handle user requests
@@ -48,7 +46,7 @@ while True:
         queue = Queue()
         conn = listener.accept()
         msg = conn.recv()
-        if not is_user_request(msg) or is_command(msg): raise Error("Invalid message recieved")
+        if not is_user_request(msg) or is_command(msg): raise Exception("Invalid message recieved")
         if is_user_request(msg): queue.put(msg)
         
         # Process A: Listener, only ends on command
@@ -86,6 +84,7 @@ while True:
             timer.terminate()
         
         # TODO: I'm expecting a Slack API error, fix so we can post messages
+        # TODO: Check if we can message multiple students at once instead of one at a time
         # After all requests received, return the results
         groups = SimpleGrouper.simple_group(list(queue))
         for group in groups:
@@ -101,5 +100,5 @@ while True:
                 except SlackApiError as e:
                     print(f"Error: {e}")
 
-    except Error as e:
+    except Exception as e:
         print(e)
