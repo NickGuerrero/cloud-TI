@@ -314,14 +314,11 @@ def handle_submission(ack, body, client, view, logger):
     # Collect form data
     group_dict = dict()
     group_dict["slack_id"] = body["user"]["id"]
-    # This section breaks because the key "value" can't be found, TODO
-    # I'm inserting a print statement to check the log to see what's wrong
-    print(view["state"]["values"])
-    group_dict["meeting_type"] = view["state"]["values"]["meet_type"]["value"]
-    group_dict["meeting_size"] = view["state"]["values"]["meet_size"]["value"]
-    group_dict["group_type"] = view["state"]["values"]["meet_size"]["value"]
-    group_dict["topic"] = view["state"]["values"]["topic_type"]["value"]
-    ###################################################################
+    group_dict["meeting_type"] = view["state"]["values"]["meet_type"]["meet_type_value"]
+    group_dict["meeting_size"] = view["state"]["values"]["meet_size"]["meet_size_value"]
+    group_dict["group_type"] = view["state"]["values"]["group_type"]["group_type_value"]
+    group_dict["topic"] = view["state"]["values"]["topic_type"]["topic_type_value"]
+
     ack()
     # Send data to queue and acknowledge
     try:
@@ -410,7 +407,7 @@ def open_modal(ack, body, client):
                                 "value": "type-solve"
                             }
                         ],
-                        "action_id": "static_select-action"
+                        "action_id": "meet_type_value"
                     },
                     "label": {
                         "type": "plain_text",
@@ -456,7 +453,7 @@ def open_modal(ack, body, client):
                                 "value": "topic-algorithms"
                             }
                         ],
-                        "action_id": "static_select-action"
+                        "action_id": "topic_type_value"
                     },
                     "label": {
                         "type": "plain_text",
@@ -488,7 +485,7 @@ def open_modal(ack, body, client):
                                 "value": "group-fixed"
                             }
                         ],
-                        "action_id": "static_select-action"
+                        "action_id": "group_type_value"
                     },
                     "label": {
                         "type": "plain_text",
@@ -534,7 +531,7 @@ def open_modal(ack, body, client):
                                 "value": "size-any"
                             }
                         ],
-                        "action_id": "static_select-action"
+                        "action_id": "meet_size_value"
                     },
                     "label": {
                         "type": "plain_text",
