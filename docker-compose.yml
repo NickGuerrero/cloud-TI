@@ -1,7 +1,6 @@
 version: "3"
 services:
-    python:
-        container_name: standard-backend
+    standard-backend:
         build:
             context: app
             dockerfile: app.Dockerfile
@@ -9,8 +8,7 @@ services:
             - "3000:3000"
         volumes:
             - ./app:/app
-    python-queue:
-        container_name: group-queue
+    group-queue:
         build:
             context: app
             dockerfile: queue.Dockerfile

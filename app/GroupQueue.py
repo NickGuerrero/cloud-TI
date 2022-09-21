@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Close after 5 minutes
 
 # Assume the event listener and queue are on the same Docker instance
-HOST = "127.0.0.1"
+HOST = "group-queue"
 PORT = 4000
 TIMER = 180 # 3 minutes
 MAX_TIME_LIMIT = 600 # 10 minutes

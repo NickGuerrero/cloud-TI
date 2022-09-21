@@ -322,7 +322,7 @@ def handle_submission(ack, body, client, view, logger):
     ack()
     # Send data to queue and acknowledge
     try:
-        HOST = '127.0.0.1'              # Localhost
+        HOST = 'group-queue'              # Localhost
         PORT = 4000                     # Port location of other program
         with Client((HOST, PORT), authkey=b'password') as conn:
             conn.send(group_dict)
