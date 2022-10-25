@@ -15,6 +15,15 @@ SECRET = "password" # Please replace this with a value in the environment
 def is_user_request(req): return all(k in req for k in ("slack_id","meeting_type", "meeting_size", "topic"))
 def is_command(req): "cmd_secret" in req and req["cmd_secret"] == SECRET
 
+def correct_form(x):
+    """ Fix the form received from the listener to work with the simple grouper """
+    output = {}
+    output["slack_id"] = x['slack_id']
+    output["meeting_type"] = x['meeting_type']['selected_option']['text']['text']
+    output["meeting_size"] = int(x['meeting_size']['selected_option']['text']['text'])
+    output["topic"] = x['topic']['selected_option']['text']['text']
+    return output
+
 # WebClient instantiates a client that can call API methods
 # When using Bolt, you can use either `app.client` or the `client` passed to listeners.
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
@@ -40,8 +49,9 @@ logger = logging.getLogger(__name__)
 # Assume the event listener and queue are on the same Docker instance
 HOST = "group-queue"
 PORT = 4000
-TIMER = 180 # 3 minutes
-MAX_TIME_LIMIT = 600 # 10 minutes
+# CHANGED FOR DEBUGGING
+TIMER = 60 # 3 minutes
+MAX_TIME_LIMIT = 100 # 10 minutes
 
 # Create a server to handle user requests
 listener = Listener((HOST, PORT), authkey=b'password')
@@ -54,22 +64,24 @@ while True:
         conn = listener.accept()
         msg = conn.recv()
         if not is_user_request(msg) or is_command(msg): raise Exception("Invalid message recieved")
-        if is_user_request(msg): queue.put(msg)
+        if is_user_request(msg):
+            queue.put(msg)
+            conn.send(1)
         
         # Thread A: Listener, only ends on command
-        def proc_a(reciever, q: Queue):
+        def proc_a(receiver, q: Queue):
             active = True
             while active:
-                conn = reciever.accept()
-                msg = conn.recv()
-                if is_user_request(msg):
-                    q.put(msg)
-                    conn.send(1)
-                elif is_command(msg):
-                    if msg["cmd"] == "stop":
-                        active = False
-                else:
-                    conn.send(0)
+                with receiver as conn:
+                    msg = conn.recv()
+                    if is_user_request(msg):
+                        q.put(msg)
+                        conn.send(1)
+                    elif is_command(msg):
+                        if msg["cmd"] == "stop":
+                            active = False
+                    else:
+                        conn.send(0)
 
         # Thread B: Timer
         def proc_b(t=TIMER):
@@ -105,7 +117,7 @@ while True:
         # TODO: I'm expecting a Slack API error, fix so we can post messages
         # TODO: Check if we can message multiple students at once instead of one at a time
         # After all requests received, return the results
-        tmp = [queue.get() for i in range(queue.qsize())]
+        tmp = [correct_form(queue.get()) for i in range(queue.qsize())]
         logger.info("Queue after polling: " + str(tmp))
         groups = SimpleGrouper.simple_group(tmp)
         logger.info("Groupings: " + str(groups))
@@ -120,7 +132,7 @@ while True:
                             blocks=mail
                         )
                 except SlackApiError as e:
-                    print(f"Error: {e}")
+                    logger.error(f"Error: {e}")
 
     except Exception as e:
-        print(e)
+        logger.error(e)
