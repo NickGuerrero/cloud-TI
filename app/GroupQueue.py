@@ -2,10 +2,12 @@ import SimpleGrouper
 import GroupFormResponse
 from multiprocessing import Process, Queue
 from multiprocessing.connection import Listener, Client
+import threading
 
 import logging
 import os
 import time
+import datetime
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
@@ -16,6 +18,10 @@ def is_command(req): "cmd_secret" in req and req["cmd_secret"] == SECRET
 # WebClient instantiates a client that can call API methods
 # When using Bolt, you can use either `app.client` or the `client` passed to listeners.
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
+
+# Logging
+dt = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+logging.basicConfig(filename="listener-queue-" + dt + ".log")
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +47,7 @@ MAX_TIME_LIMIT = 600 # 10 minutes
 listener = Listener((HOST, PORT), authkey=b'password')
 
 while True:
+    logger.info("Starting polling cycle")
     try:
         # Open queue and polling session on first request
         queue = Queue()
@@ -49,7 +56,7 @@ while True:
         if not is_user_request(msg) or is_command(msg): raise Exception("Invalid message recieved")
         if is_user_request(msg): queue.put(msg)
         
-        # Process A: Listener, only ends on command
+        # Thread A: Listener, only ends on command
         def proc_a(reciever, q: Queue):
             active = True
             while active:
@@ -64,7 +71,7 @@ while True:
                 else:
                     conn.send(0)
 
-        # Process B: Timer
+        # Thread B: Timer
         def proc_b(t=TIMER):
             time.sleep(t)
             done = False
@@ -73,6 +80,7 @@ while True:
                     conn.send({"cmd_secret": "password","cmd": "stop"})
                     done = conn.recv()
 
+        """
         # Run both processes, polling can kill timer to reset
         polling = Process(target=proc_a, args=(listener, queue))
         timer = Process(target=proc_b, args=(TIMER,))
@@ -82,11 +90,25 @@ while True:
         polling.join(MAX_TIME_LIMIT)
         if timer.is_alive():
             timer.terminate()
+        """
+
+        # Threading implementation of above
+        logger.info("Starting Threading")
+        polling = threading.Thread(target=proc_a, args=(listener, queue))
+        timer = threading.Thread(target=proc_b, args=(TIMER,))
+        polling.start()
+        timer.start()
+        polling.join(MAX_TIME_LIMIT)
+        logger.info("Polling status after join:" + str(polling.is_alive()))
+        logger.info("Timer status after join:" + str(timer.is_alive()))
         
         # TODO: I'm expecting a Slack API error, fix so we can post messages
         # TODO: Check if we can message multiple students at once instead of one at a time
         # After all requests received, return the results
-        groups = SimpleGrouper.simple_group(list(queue))
+        tmp = [queue.get() for i in range(queue.qsize())]
+        logger.info("Queue after polling: " + str(tmp))
+        groups = SimpleGrouper.simple_group(tmp)
+        logger.info("Groupings: " + str(groups))
         for group in groups:
             mail = GroupFormResponse.generate_response(group)
             for member in group["members"]:
