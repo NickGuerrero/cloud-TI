@@ -29,8 +29,8 @@ def correct_form(x):
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 # Logging
-dt = datetime.now().strftime("%Y-%m-%d-%H%M%S")
-logging.basicConfig(filename="listener-queue-" + dt + ".log")
+dt = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+logging.basicConfig(filename="listener-queue-" + dt + ".log", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -72,7 +72,7 @@ while True:
         def proc_a(receiver, q: Queue):
             active = True
             while active:
-                with receiver as conn:
+                with receiver.accept() as conn:
                     msg = conn.recv()
                     if is_user_request(msg):
                         q.put(msg)
@@ -125,7 +125,7 @@ while True:
             mail = GroupFormResponse.generate_response(group)
             for member in group["members"]:
                 try:
-                    result = client.conversations_open(member)
+                    result = client.conversations_open(token=client.token, users=member)
                     if result["ok"]:
                         result = client.chat_postMessage(
                             channel=result["channel"]["id"],
