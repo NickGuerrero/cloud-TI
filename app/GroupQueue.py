@@ -4,6 +4,7 @@ from multiprocessing import Process, Queue
 from multiprocessing.connection import Listener, Client
 import threading
 
+import json
 import logging
 import os
 import time
@@ -33,25 +34,12 @@ dt = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
 logging.basicConfig(filename="listener-queue-" + dt + ".log", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# To solve the timeout problem, you have to make a separate timeout process
-# Either the listener in a process or a timer process that will kill the child
-# The queue does not need to be accessed by multiple threads at the same time
-# The threads will close by the time the queue needs to be read
-
-# Command List, request and command listener are the same
-# Open an empty queue
-# Close a queue regardless of state
-
-# Wait for an initial request
-# Close after 5 minutes
-
 # Assume the event listener and queue are on the same Docker instance
 HOST = "group-queue"
 PORT = 4000
 # CHANGED FOR DEBUGGING
-TIMER = 60 # 3 minutes
-MAX_TIME_LIMIT = 100 # 10 minutes
+TIMER = 60 # 1 minute
+MAX_TIME_LIMIT = 100 # 1 minute, 40 seconds
 
 # Create a server to handle user requests
 listener = Listener((HOST, PORT), authkey=b'password')
@@ -92,18 +80,6 @@ while True:
                     conn.send({"cmd_secret": "password","cmd": "stop"})
                     done = conn.recv()
 
-        """
-        # Run both processes, polling can kill timer to reset
-        polling = Process(target=proc_a, args=(listener, queue))
-        timer = Process(target=proc_b, args=(TIMER,))
-        polling.start()
-        timer.start()
-        # If max time limit was hit, something horrible went wrong and process needs to die anyway
-        polling.join(MAX_TIME_LIMIT)
-        if timer.is_alive():
-            timer.terminate()
-        """
-
         # Threading implementation of above
         logger.info("Starting Threading")
         polling = threading.Thread(target=proc_a, args=(listener, queue))
@@ -114,18 +90,18 @@ while True:
         logger.info("Polling status after join:" + str(polling.is_alive()))
         logger.info("Timer status after join:" + str(timer.is_alive()))
         
-        # TODO: I'm expecting a Slack API error, fix so we can post messages
         # TODO: Check if we can message multiple students at once instead of one at a time
+        # TODO: Also check if that's viable or if it's too overwhelming
         # After all requests received, return the results
         tmp = [correct_form(queue.get()) for i in range(queue.qsize())]
         logger.info("Queue after polling: " + str(tmp))
         groups = SimpleGrouper.simple_group(tmp)
         logger.info("Groupings: " + str(groups))
         for group in groups:
-            mail = GroupFormResponse.generate_response(group)
+            mail = json.dumps(GroupFormResponse.generate_response(group)["blocks"])
             for member in group["members"]:
                 try:
-                    result = client.conversations_open(token=client.token, users=member)
+                    result = client.conversations_open(token=os.environ.get("SLACK_BOT_TOKEN"), users=member)
                     if result["ok"]:
                         result = client.chat_postMessage(
                             channel=result["channel"]["id"],
