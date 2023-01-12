@@ -3,7 +3,7 @@ services:
     standard-backend:
         build:
             context: app
-            dockerfile: ./app/slack-listener/app.Dockerfile
+            dockerfile: ./slack-listener/app.Dockerfile
         env_file:
             - ./app/.env
         ports:
@@ -14,7 +14,7 @@ services:
     group-queue:
         build:
             context: app
-            dockerfile: ./app/grouping-queue/queue.Dockerfile
+            dockerfile: ./grouping-queue/queue.Dockerfile
         env_file:
             - ./app/.env
         ports:
