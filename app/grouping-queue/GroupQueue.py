@@ -1,5 +1,5 @@
-import SimpleGrouper
-import GroupFormResponse
+from utils import SimpleGrouper
+from modals import GroupFormResponse
 from multiprocessing import Process, Queue
 from multiprocessing.connection import Listener, Client
 import threading
