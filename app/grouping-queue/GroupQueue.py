@@ -16,6 +16,7 @@ SECRET = "password" # Please replace this with a value in the environment
 def is_user_request(req): return all(k in req for k in ("slack_id","meeting_type", "meeting_size", "topic"))
 def is_command(req): "cmd_secret" in req and req["cmd_secret"] == SECRET
 
+# TODO: Carry this over to the Slack Listener, we only handle clean data here
 def correct_form(x):
     """ Fix the form received from the listener to work with the simple grouper """
     output = {}
@@ -38,11 +39,82 @@ logger = logging.getLogger(__name__)
 HOST = "group-queue"
 PORT = 4000
 # CHANGED FOR DEBUGGING
-TIMER = 60 # 1 minute
-MAX_TIME_LIMIT = 100 # 1 minute, 40 seconds
+TIMER = 60
+MAX_TIME_LIMIT = 100
+
+# Determine how to prioritize attributes of the form. For example, a weight of
+# {"a": 1, "b": 2} means that b will factor twice as much as a
+WEIGHTS = {"size": 1, "difficulty": 3, "topics": 2}
+
+# Classes for streamlining group matching
+# Abstract Class Groupable
+# Fields: attributes (dict), lifespan (int)
+# Methods: Compare,  
+
+def compare_groupable(user_x, user_y, weights):
+    '''
+    Create a compatbility rating between two users, two groups, or a user and a group
+    Larger score is a worse score, you can think of it as the distance between two points
+    :param user_x: A dictionary representing the desired group attributes
+                   Two types of entries: String => Numeric & String => {String => Numeric}
+    :param user_y: The user to compare to, follows a similar form
+    :param weights: A dictionary that weighs the attributes, direct multiplication
+                    There is no default because the user should have a good understanding
+                    of what attributes and how they affect the desired result
+    :return: A numeric score comparing each of the attributes they BOTH have
+    
+    Notes:
+    - A numeric value of 0 is treated like a wildcard, (it zeroes out the error score)
+      This is done to accomodate 'Surprise Me', with the goal of creating a match the fastest
+      However, this doesn't apply to attribute dictionaries, to improve matching
+    - The original comparison (diff, size, topics) just happened to have errors within 0-2 range
+      Weights are still useful for shifting around the priority of attributes
+    - Currently uses linear error, squaring the error may be better
+    '''
+    try:
+        error_score = 0
+        atts = list(set(user_x.keys()) & set(user_y.keys()))
+        for att in atts:
+            # Use the weights to control how the error contributes to the net error
+            if isinstance(user_x[att], dict):
+                # Assume that the sum of a single dictionary's values is 1, i.e. floats
+                fields = list(set(user_x[att].keys()) & set(user_y[att].keys()))
+                dict_score = 2 - sum((user_x[att][field] + user_y[att][field] for field in fields))
+                error_score += weights[att] * (dict_score)
+            else:
+                # Assume the internal dictionary is Key => Numeric
+                error_score += weights[att] * (abs(user_x[att] - user_y[att]) if user_x[att] * user_y[att] != 0 else 0)
+        return error_score
+    except AttributeError:
+        logger.error("Attribute mismatch when comparing " + str(user_x) + " and " + str(user_y))
+        return 2000000 # Some arbitarily high number
+    except TypeError:
+        logger.error("Attribute values are not compatible when comparing " + str(user_x) + " and " + str(user_y))
+        return 2000000 # Some arbitrarily high number
 
 # Create a server to handle user requests
 listener = Listener((HOST, PORT), authkey=b'password')
+queue = Queue() # Read & Write
+
+# Thread A: Listen for server requests and handle immediate requests
+def listener_thread(receiver, q: Queue):
+    while True:
+        with receiver.accept() as conn:
+            packet = conn.recv()
+            # If group form, add to queue & let Thread B handle it
+            # If status check, check group status
+
+# Thread B: Cron jobs, prevent listener from getting backed up
+def worker_thread(q: Queue):
+    while True:
+        # Check for new users
+        # Shift groups if possible
+        # Check which groups are ready and if users need to repoll
+        # Send messages
+        # Remove groups/users
+        # Generate iterative log
+        time.sleep(TIMER)
+        pass
 
 while True:
     logger.info("Starting polling cycle")
