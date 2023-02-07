@@ -16,16 +16,6 @@ SECRET = "password" # Please replace this with a value in the environment
 def is_user_request(req): return all(k in req for k in ("slack_id","meeting_type", "meeting_size", "topic"))
 def is_command(req): "cmd_secret" in req and req["cmd_secret"] == SECRET
 
-# TODO: Carry this over to the Slack Listener, we only handle clean data here
-def correct_form(x):
-    """ Fix the form received from the listener to work with the simple grouper """
-    output = {}
-    output["slack_id"] = x['slack_id']
-    output["meeting_type"] = x['meeting_type']['selected_option']['text']['text']
-    output["meeting_size"] = int(x['meeting_size']['selected_option']['text']['text'])
-    output["topic"] = x['topic']['selected_option']['text']['text']
-    return output
-
 # WebClient instantiates a client that can call API methods
 # When using Bolt, you can use either `app.client` or the `client` passed to listeners.
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
@@ -94,7 +84,7 @@ def compare_groupable(user_x, user_y, weights):
 
 # Create a server to handle user requests
 listener = Listener((HOST, PORT), authkey=b'password')
-queue = Queue() # Read & Write
+incoming_users = Queue() # Process incoming 
 
 # Thread A: Listen for server requests and handle immediate requests
 def listener_thread(receiver, q: Queue):
@@ -116,6 +106,7 @@ def worker_thread(q: Queue):
         time.sleep(TIMER)
         pass
 
+############################################################
 while True:
     logger.info("Starting polling cycle")
     try:
