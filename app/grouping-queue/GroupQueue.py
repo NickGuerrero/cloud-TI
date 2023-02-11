@@ -2,6 +2,7 @@ from utils import SimpleGrouper
 from modals import GroupFormResponse
 from multiprocessing import Process, Queue
 from multiprocessing.connection import Listener, Client
+from queue import Empty as EmptyQueue
 import threading
 
 import json
@@ -31,6 +32,8 @@ PORT = 4000
 # CHANGED FOR DEBUGGING
 TIMER = 60
 MAX_TIME_LIMIT = 100
+SECRET = "password"
+PACKET_CONTENT = ("slack_id", "difficulty", "meeting_size", "topic")
 
 # Determine how to prioritize attributes of the form. For example, a weight of
 # {"a": 1, "b": 2} means that b will factor twice as much as a
@@ -84,29 +87,52 @@ def compare_groupable(user_x, user_y, weights):
 
 # Create a server to handle user requests
 listener = Listener((HOST, PORT), authkey=b'password')
-incoming_users = Queue() # Process incoming 
+incoming_users = Queue(maxsize=100) # Process incoming requests, 100 is a safe cap 
 
 # Thread A: Listen for server requests and handle immediate requests
-def listener_thread(receiver, q: Queue):
+def listener_thread(receiver, user_req_queue: Queue):
     while True:
         with receiver.accept() as conn:
             packet = conn.recv()
-            # If group form, add to queue & let Thread B handle it
-            # If status check, check group status
+            if packet["header"] == "user_queue_request" and packet["secret"] == SECRET:
+                # Filter out the packet content and put in user queue
+                user_req_queue.put({x: packet[x] for x in PACKET_CONTENT}, block=False)
+                conn.send(1)
+            elif packet["header"] == "check_queue_count" and packet["secret"] == SECRET:
+                # Check status of users waiting in the queue TODO: Not implemented yet until needed
+                conn.send(-1)
+            elif packet["secret"] != SECRET:
+                logger.warning("Request secret does not match with packet contents: " + str(packet))
+                conn.send(-1)
+            else:
+                logger.warning("Request does not exist with packet contents: " + str(packet))
+                conn.send(-1)
 
 # Thread B: Cron jobs, prevent listener from getting backed up
-def worker_thread(q: Queue):
+def worker_thread(user_req_queue: Queue, timer=TIMER):
+    groups_waiting = []
     while True:
+        start_time = time.time()
         # Check for new users
+        users_waiting = []
+        try:
+            while True:
+                users_waiting.append(user_req_queue.get(block=False))
+        except EmptyQueue: pass
         # Shift groups if possible
-        # Check which groups are ready and if users need to repoll
-        # Send messages
-        # Remove groups/users
+        # Check which groups are ready and if users need to repoll -> Send messages -> Remove groups/users
         # Generate iterative log
-        time.sleep(TIMER)
-        pass
+
+        # Determine wait time for next iteration
+        end_time = time.time() - start_time
+        if(end_time > TIMER): logger.warning("Cron job runtime exceeds the time allotted: " + str(end_time))
+        time.sleep(time - min(timer, end_time))
 
 ############################################################
+# def group_matcher(users_waiting: List, groups_waiting: Queue) => groups_waiting (Placed groups closer together)
+# def group_timeout(groups_waiting: Queue) => groups_waiting (Send messages to groups if ready, timeout single user groups)
+# 
+# Old Code Below, leaving here as reference during the re-write
 while True:
     logger.info("Starting polling cycle")
     try:
