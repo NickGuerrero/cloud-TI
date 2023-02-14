@@ -4,9 +4,27 @@ class DuplicateUserException(Exception):
     pass
 
 class UserGroup:
+    '''
+    UserGroup: Represents users and group when forming groups together
+    
+    Class Attributes
+    :user set(String): A set of strings, representing unique ids of all users waiting
+
+    Instance Atrributes:
+    :ids list(String): A list of slack ids that represent the group members
+    :attr dict(String=>Numeric -OR- String=>dict(String=>Numeric)): A dictionary of attributes
+        - String=>Numeric are values compared directly
+        - String=>dict(String=>Numeric) are dictionary where all values add up to 1. Normalize when merging.
+    :timeout int: The number of cycles that a UserGroup object has iterated through
+    '''
     users = set()
 
     def __init__(self, slack_id, att_dict):
+        '''
+        Defines a UserGroup object from the provided id and comparison attributes
+        :param slack_id: The unique id associated with each member (App uses the slack id)
+        :param att_dict: The attribute dictionary for the instance
+        '''
         if slack_id in UserGroup.users: raise DuplicateUserException
         UserGroup.users.add(slack_id)
         self.ids = [slack_id]
@@ -14,10 +32,15 @@ class UserGroup:
         self.timeout = 1
 
     def expire(self):
+        '''Remove all group ids from the set of users'''
         for id in self.ids:
             UserGroup.users.remove(id)
     
     def merge(self, other):
+        '''
+        Merge this UserGroup with another UserGroup
+        :param other: UserGroup object, combines the ids, attributes, and timeout
+        '''
         self.ids.extend(other.ids)
         self.timeout = (self.timeout + other.timeout) // 2
         for att in self.attr.keys():
@@ -35,15 +58,15 @@ class UserGroup:
                 # Key => Numeric is just the average
                 self.attr[att] = (self.attr[att] + other.attr[att]) / 2
 
-# Compatibility Rating
+# Compatibility Rating Function
 def compare_groupable(user_x, user_y, weights):
     '''
     Create a compatbility rating between two users, two groups, or a user and a group
     Larger score is a worse score, you can think of it as the distance between two points
-    :param user_x: A dictionary representing the desired group attributes
-                   Two types of entries: String => Numeric & String => {String => Numeric}
-    :param user_y: The user to compare to, follows a similar form
+    :param user_x: A UserGroup object to compare to
+    :param user_y: Another UserGroup Object
     :param weights: A dictionary that weighs the attributes, direct multiplication
+                    The dictionary should match what's in the attribute dictionary already
                     There is no default because the user should have a good understanding
                     of what attributes and how they affect the desired result
     :return: A numeric score comparing each of the attributes they BOTH have
@@ -58,17 +81,17 @@ def compare_groupable(user_x, user_y, weights):
     '''
     try:
         error_score = 0
-        atts = list(set(user_x.keys()) & set(user_y.keys()))
+        atts = list(set(user_x.attr.keys()) & set(user_y.attr.keys()))
         for att in atts:
             # Use the weights to control how the error contributes to the net error
-            if isinstance(user_x[att], dict):
+            if isinstance(user_x.attr[att], dict):
                 # Assume that the sum of a single dictionary's values is 1, i.e. floats
-                fields = list(set(user_x[att].keys()) & set(user_y[att].keys()))
-                dict_score = 2 - sum((user_x[att][field] + user_y[att][field] for field in fields))
+                fields = list(set(user_x.attr[att].keys()) & set(user_y.attr[att].keys()))
+                dict_score = 2 - sum((user_x.attr[att][field] + user_y.attr[att][field] for field in fields))
                 error_score += weights[att] * (dict_score)
             else:
                 # Assume the internal dictionary is Key => Numeric
-                error_score += weights[att] * (abs(user_x[att] - user_y[att]) if user_x[att] * user_y[att] != 0 else 0)
+                error_score += weights[att] * (abs(user_x.attr[att] - user_y.attr[att]) if user_x.attr[att] * user_y.attr[att] != 0 else 0)
         return error_score
     except AttributeError:
         # logger.error("Attribute mismatch when comparing " + str(user_x) + " and " + str(user_y))
