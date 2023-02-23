@@ -57,6 +57,15 @@ class UserGroup:
             else:
                 # Key => Numeric is just the average
                 self.attr[att] = (self.attr[att] + other.attr[att]) / 2
+    
+    def step(self, n=1):
+        '''Increment (or decrement) the timeout counter for checking group cohesion'''
+        self.timeout += n
+
+    @staticmethod
+    def reset():
+        '''Reset the unique id set to an empty if needed'''
+        UserGroup.users = set()
 
 # Compatibility Rating Function
 def compare_groupable(user_x, user_y, weights):
