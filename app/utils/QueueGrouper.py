@@ -1,13 +1,13 @@
 from multiprocessing import Queue
 from collections import deque
-from UserGroup import UserGroup, compare_groupable
+from utils import UserGroup
 import math
 
 class ImproperQueueException(Exception):
     pass
 
 # Penalty functions: Must accept UserGroup objects & weights, and return a numeric penalty
-def meeting_size_penalty(user_x: UserGroup, user_y: UserGroup, weights: dict, maxsize=4):
+def meeting_size_penalty(user_x: UserGroup.UserGroup, user_y: UserGroup.UserGroup, weights: dict, maxsize=4):
     full_size = len(user_x.ids) + len(user_y.ids)
     if full_size < min(user_x.attr["meeting_size"], user_y.attr["meeting_size"]):
         return -1 * weights["meeting_size"]
@@ -19,7 +19,7 @@ def meeting_size_penalty(user_x: UserGroup, user_y: UserGroup, weights: dict, ma
 PENALTIES = [meeting_size_penalty]
 def group_matcher(
     users_waiting: deque, groups_waiting: deque, weights:dict,
-    compromise_factor: int, match_threshold: int, timeout_threshold: int,
+    compromise_factor: int, match_threshold: int,
     penalities=PENALTIES):
     # Go down the group wait queue
 
@@ -30,7 +30,7 @@ def group_matcher(
         users_waiting.append(None)
         while users_waiting[0] is not None:
             # Score: Direct Comparison + Penalties
-            compat_score = compare_groupable(groups_waiting[0], users_waiting[0], weights)
+            compat_score = UserGroup.compare_groupable(groups_waiting[0], users_waiting[0], weights)
             compat_score += sum((p(groups_waiting[0], users_waiting[0], weights)) for p in penalities)
             compat_score = max(0, compat_score)
             # Decide whether to merge or not
@@ -47,14 +47,16 @@ def group_matcher(
             groups_waiting.rotate(-1)
     groups_waiting.popleft() # Removes the other sentinel None we placed even earlier
     groups_waiting.extendleft(users_waiting) # Place the unmatched users at front of group queue
+    users_waiting.clear() # Remember to dump the user queue now that we're done with it
 
     # Rotation 2: Try to merge users that couldn't find a group originally
-    groups_waiting.append(None)
-    while groups_waiting[0] is not None:
-        retry_queue.append(None)
-        while retry_queue[0] is not None:
+    retry_queue.append(None)
+    while retry_queue[0] is not None:
+        not_matched = True
+        groups_waiting.append(None)
+        while (groups_waiting[0] is not None) and not_matched:
             # Use the original comparison + penalty as a basis
-            compat_score = compare_groupable(groups_waiting[0], retry_queue[0], weights)
+            compat_score = UserGroup.compare_groupable(groups_waiting[0], retry_queue[0], weights)
             compat_score += sum((p(groups_waiting[0], retry_queue[0], weights)) for p in penalities)
             compat_score = max(0, compat_score)
             # We use a combination of timeout and compromise factor (CF) to artificially lower thresholds
@@ -66,12 +68,17 @@ def group_matcher(
                 parent = groups_waiting.popleft()
                 parent.merge(retry_queue.popleft())
                 groups_waiting.appendleft(parent)
+                not_matched = False
             else:
-                retry_queue.rotate(-1)
-        retry_queue.popleft() # Remove the None we placed at the end of retry_queue
-        groups_waiting.rotate(-1) # Rotate forward to the next UserGroup
-    groups_waiting.popleft() # Remove the None we placed at the end of groups_waiting
-    groups_waiting.extendleft(retry_queue) # Add everything not placed back into the group queue
+                groups_waiting.rotate(-1)
+        # Reset groups_waiting loop by removing the None
+        while groups_waiting[0] is not None:
+            groups_waiting.rotate(-1)
+        groups_waiting.popleft()
+        # Re-integrate if a group wasn't found, guarantees an increment on retry_queue
+        if not_matched: groups_waiting.appendleft(retry_queue.popleft())
+    retry_queue.popleft() # Remove the None we placed at the end of the retry queue
+    # retry_queue should be empty, no matter what
 
     # users_waiting should be empty (& can be discarded), groups_waiting modified
     # Timeout is not incremented here, read-only

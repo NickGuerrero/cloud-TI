@@ -108,3 +108,27 @@ def compare_groupable(user_x, user_y, weights):
     except TypeError:
         # logger.error("Attribute values are not compatible when comparing " + str(user_x) + " and " + str(user_y))
         return 2000000 # Some arbitrarily high number
+
+# Convert packets into UserGroup objects (Moved here to make testing easier)
+def convert_to_usergroup(packet):
+    '''
+    Converts a packet recieved from Slack into a UserGroup object for easy matching
+    :param packet: A dictionary with string keys and variable content
+
+    Expected Packet Contents {
+        slack_id (String): The slack id retrieve from the Slack API
+        difficulty (String): A numeric score that associates with a difficulty
+        meeting_size (String): A number that aligns with the desired group size
+        topics (List(String)): A list of topics strings, we give these numeric weights
+    }
+    '''
+    # Get basic packet content
+    id = packet["slack_id"]
+    diff = int(packet["difficulty"])
+    sz = int(packet["meeting_size"])
+    # Create the topic dictionary, topics have weight 1 / size of the topic list
+    ls = dict()
+    ls_size = len(packet["topics"])
+    for topic in packet["topics"]:
+        ls[topic] = 1 / ls_size
+    return UserGroup(id, {"difficulty":diff, "meeting_size":sz, "topics":ls})
