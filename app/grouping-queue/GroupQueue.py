@@ -16,10 +16,6 @@ import datetime
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-SECRET = "password" # Please replace this with a value in the environment
-def is_user_request(req): return all(k in req for k in ("slack_id","meeting_type", "meeting_size", "topic"))
-def is_command(req): "cmd_secret" in req and req["cmd_secret"] == SECRET
-
 # WebClient instantiates a client that can call API methods
 # When using Bolt, you can use either `app.client` or the `client` passed to listeners.
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
@@ -33,8 +29,7 @@ logger = logging.getLogger(__name__)
 HOST = "group-queue"
 PORT = 4000
 # CHANGED FOR DEBUGGING
-TIMER = 60
-MAX_TIME_LIMIT = 100
+TIMER = 15                      # Seconds to wait between cycles
 TIMEOUT_THRESHOLD = 12          # Number of cycles to wait before sending feedback to user
 SECRET = "password"
 PACKET_CONTENT = ("slack_id", "difficulty", "meeting_size", "topics")
@@ -114,8 +109,8 @@ def worker_thread(user_req_queue: Queue, timer=TIMER):
 
         # Determine wait time for next iteration
         end_time = time.time() - start_time
-        if(end_time > TIMER): logger.warning("Cron job runtime exceeds the time allotted: " + str(end_time))
-        time.sleep(time - min(timer, end_time))
+        if(end_time > timer): logger.warning("Cron job runtime exceeds the time allotted: " + str(end_time))
+        time.sleep(timer - min(timer, end_time))
 
 def main():
     # Create a server to handle user requests
@@ -134,6 +129,7 @@ if __name__ == "__main__":
 ############################################################
 # Old Code Below, leaving here as reference during the re-write
 '''
+MAX_TIME_LIMIT = 100
 while True:
     logger.info("Starting polling cycle")
     try:
