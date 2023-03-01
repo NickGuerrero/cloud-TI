@@ -1,8 +1,11 @@
 from utils import SimpleGrouper
+from utils import QueueGrouper, UserGroup
 from modals import GroupFormResponse
+
 from multiprocessing import Process, Queue
 from multiprocessing.connection import Listener, Client
 from queue import Empty as EmptyQueue
+from collections import deque
 import threading
 
 import json
@@ -32,65 +35,17 @@ PORT = 4000
 # CHANGED FOR DEBUGGING
 TIMER = 60
 MAX_TIME_LIMIT = 100
+TIMEOUT_THRESHOLD = 12          # Number of cycles to wait before sending feedback to user
 SECRET = "password"
-PACKET_CONTENT = ("slack_id", "difficulty", "meeting_size", "topic")
+PACKET_CONTENT = ("slack_id", "difficulty", "meeting_size", "topics")
 
 # Determine how to prioritize attributes of the form. For example, a weight of
 # {"a": 1, "b": 2} means that b will factor twice as much as a
-WEIGHTS = {"size": 1, "difficulty": 3, "topics": 2}
-
-# Classes for streamlining group matching
-# Abstract Class Groupable
-# Fields: attributes (dict), lifespan (int)
-# Methods: Compare,  
-
-def compare_groupable(user_x, user_y, weights):
-    '''
-    Create a compatbility rating between two users, two groups, or a user and a group
-    Larger score is a worse score, you can think of it as the distance between two points
-    :param user_x: A dictionary representing the desired group attributes
-                   Two types of entries: String => Numeric & String => {String => Numeric}
-    :param user_y: The user to compare to, follows a similar form
-    :param weights: A dictionary that weighs the attributes, direct multiplication
-                    There is no default because the user should have a good understanding
-                    of what attributes and how they affect the desired result
-    :return: A numeric score comparing each of the attributes they BOTH have
-    
-    Notes:
-    - A numeric value of 0 is treated like a wildcard, (it zeroes out the error score)
-      This is done to accomodate 'Surprise Me', with the goal of creating a match the fastest
-      However, this doesn't apply to attribute dictionaries, to improve matching
-    - The original comparison (diff, size, topics) just happened to have errors within 0-2 range
-      Weights are still useful for shifting around the priority of attributes
-    - Currently uses linear error, squaring the error may be better
-    '''
-    try:
-        error_score = 0
-        atts = list(set(user_x.keys()) & set(user_y.keys()))
-        for att in atts:
-            # Use the weights to control how the error contributes to the net error
-            if isinstance(user_x[att], dict):
-                # Assume that the sum of a single dictionary's values is 1, i.e. floats
-                fields = list(set(user_x[att].keys()) & set(user_y[att].keys()))
-                dict_score = 2 - sum((user_x[att][field] + user_y[att][field] for field in fields))
-                error_score += weights[att] * (dict_score)
-            else:
-                # Assume the internal dictionary is Key => Numeric
-                error_score += weights[att] * (abs(user_x[att] - user_y[att]) if user_x[att] * user_y[att] != 0 else 0)
-        return error_score
-    except AttributeError:
-        logger.error("Attribute mismatch when comparing " + str(user_x) + " and " + str(user_y))
-        return 2000000 # Some arbitarily high number
-    except TypeError:
-        logger.error("Attribute values are not compatible when comparing " + str(user_x) + " and " + str(user_y))
-        return 2000000 # Some arbitrarily high number
-
-# Create a server to handle user requests
-listener = Listener((HOST, PORT), authkey=b'password')
-incoming_users = Queue(maxsize=100) # Process incoming requests, 100 is a safe cap 
+WEIGHTS = {"meeting_size": 2, "difficulty": 3, "topics": 1}
 
 # Thread A: Listen for server requests and handle immediate requests
 def listener_thread(receiver, user_req_queue: Queue):
+    logger.info("Listener Thread started")
     while True:
         with receiver.accept() as conn:
             packet = conn.recv()
@@ -110,29 +65,75 @@ def listener_thread(receiver, user_req_queue: Queue):
 
 # Thread B: Cron jobs, prevent listener from getting backed up
 def worker_thread(user_req_queue: Queue, timer=TIMER):
-    groups_waiting = []
+    logger.info("Cron job thread started")
+    UserGroup.reset() # Ensure that the UserGroup user list is clean for a new run
+    groups_waiting = deque(maxlen=300)
     while True:
         start_time = time.time()
-        # Check for new users
-        users_waiting = []
+        # Check for new users TODO: Make this cleaner, only one try block should be necessary
+        logger.info("Pulling new user requests into the system")
+        users_waiting = deque(maxlen=100)
         try:
             while True:
-                users_waiting.append(user_req_queue.get(block=False))
+                try:
+                    current_user = user_req_queue.get(block=False)
+                    users_waiting.append(QueueGrouper.user_to_groupable(current_user))
+                except UserGroup.DuplicateUserException:
+                    logger.error("User " + current_user["slack_id"] + " is already in the queue")
         except EmptyQueue: pass
-        # Shift groups if possible
-        # Check which groups are ready and if users need to repoll -> Send messages -> Remove groups/users
+        # Match users and increase group timeout
+        logger.info("Matching groups together")
+        QueueGrouper.group_matcher(users_waiting, groups_waiting, WEIGHTS, compromise_factor=2, match_threshold=4)
+        # Increase timeout, remove groups if they passed their expiration date
+        exit_queue = deque(maxlen=300)
+        groups_waiting.append(None)
+        while groups_waiting[0] is not None:
+            if groups_waiting[0].timeout < TIMEOUT_THRESHOLD:
+                groups_waiting[0].step()
+                groups_waiting.rotate(-1)
+            else:
+                groups_waiting[0].expire() # Remove users from the no-repeat set
+                exit_queue.append(groups_waiting.popleft())
+        groups_waiting.popleft()
+        # Message groups on the exit queue (Single id means timeout, multiple people mean group matched)
+        logger.info("Sending messages to expired groups")
+        for group in exit_queue:
+            mail = json.dumps(GroupFormResponse.generate_response(group.to_group_form())["blocks"])
+            try:
+                result = client.conversations_open(token=os.environ.get("SLACK_BOT_TOKEN"), users=",".join(group.ids))
+                if result["ok"]:
+                    result = client.chat_postMessage(
+                        channel=result["channel"]["id"],
+                        blocks=mail
+                    )
+            except SlackApiError as e:
+                logger.error(f"Error: {e}")
+        exit_queue.clear()
         # Generate iterative log
+        logger.info("All jobs finished in cycle, waiting for next iteration...")
 
         # Determine wait time for next iteration
         end_time = time.time() - start_time
         if(end_time > TIMER): logger.warning("Cron job runtime exceeds the time allotted: " + str(end_time))
         time.sleep(time - min(timer, end_time))
 
+def main():
+    # Create a server to handle user requests
+    listener = Listener((HOST, PORT), authkey=b'password')
+    incoming_users = Queue(maxsize=100) # Process incoming requests, 100 is a safe cap
+    # Start threads
+    request_accepter = threading.Thread(target=listener_thread, args=(listener, incoming_users))
+    cron_jobs = threading.Thread(target=worker_thread, args=(incoming_users, TIMER))
+    request_accepter.start()
+    cron_jobs.start()
+    request_accepter.join()
+
+if __name__ == "__main__":
+    main()
+
 ############################################################
-# def group_matcher(users_waiting: List, groups_waiting: Queue) => groups_waiting (Placed groups closer together)
-# def group_timeout(groups_waiting: Queue) => groups_waiting (Send messages to groups if ready, timeout single user groups)
-# 
 # Old Code Below, leaving here as reference during the re-write
+'''
 while True:
     logger.info("Starting polling cycle")
     try:
@@ -201,3 +202,4 @@ while True:
 
     except Exception as e:
         logger.error(e)
+'''

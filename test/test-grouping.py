@@ -19,11 +19,9 @@ def dummyreq(id_no, diff, meet_size, topic):
 WEIGHTS = {"meeting_size": 2, "difficulty": 3, "topics": 1}
 
 class TestGroupingBasic(unittest.TestCase):
-    def tests_runnable(self):
-        self.assertTrue(True)
-
     def test_basic(self):
         '''Test that the grouping function can merge two users together'''
+        UserGroup.UserGroup.reset()
         x = UserGroup.convert_to_usergroup(dummyreq("a", "1", "2", ["m", "n"]))
         y = UserGroup.convert_to_usergroup(dummyreq("b", "1", "2", ["m", "n"]))
         user_queue = deque([x,y])
@@ -43,6 +41,43 @@ class TestGroupingBasic(unittest.TestCase):
         self.assertTrue(group_queue[0].attr["meeting_size"] == 2)
         self.assertTrue(group_queue[0].attr["topics"]["m"] == 0.5)
         self.assertTrue(group_queue[0].attr["topics"]["n"] == 0.5)
+
+    def test_basic_mismatch(self):
+        '''Test that the grouping function can refuse to merge two users together'''
+        UserGroup.UserGroup.reset()
+        x = UserGroup.convert_to_usergroup(dummyreq("a", "1", "2", ["m", "n"]))
+        y = UserGroup.convert_to_usergroup(dummyreq("b", "3", "4", ["p", "q"]))
+        user_queue = deque([x,y])
+        group_queue = deque()
+        # Test that users were added to the group queue properly
+        QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=4)
+        self.assertTrue(len(group_queue) == 2)
+        self.assertTrue(len(user_queue) == 0)
+        # Test that users are not matched on the second iteration
+        QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=4)
+        assert len(group_queue) == 2
+    
+    def test_match_forgiveness(self):
+        '''Test that the grouping function can refuse to merge two users together'''
+        UserGroup.UserGroup.reset()
+        x = UserGroup.convert_to_usergroup(dummyreq("a", "1", "2", ["m", "n"]))
+        y = UserGroup.convert_to_usergroup(dummyreq("b", "3", "4", ["p", "q"]))
+        z = UserGroup.convert_to_usergroup(dummyreq("c", "2", "3", ["s", "t"]))
+        user_queue = deque([x,y,z])
+        group_queue = deque()
+        # Test that users were added to the group queue properly
+        QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=4)
+        self.assertTrue(len(group_queue) == 3)
+        self.assertTrue(len(user_queue) == 0)
+        # Test that users are not matched on the second iteration
+        QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=4)
+        self.assertTrue(len(group_queue) == 3)
+        # Change the timeouts to test forgiveness
+        group_queue[1].timeout = 12
+        group_queue[2].timeout = 12
+        # Test for forgiveness, a should forgive c but not b
+        QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=4)
+        self.assertTrue(len(group_queue) == 2)
 
 if __name__ == "__main__":
     unittest.main()

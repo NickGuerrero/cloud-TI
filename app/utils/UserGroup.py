@@ -62,6 +62,11 @@ class UserGroup:
         '''Increment (or decrement) the timeout counter for checking group cohesion'''
         self.timeout += n
 
+    # TODO: Consider streamlining this process so we don't have to adapt to old code
+    def to_group_form(self):
+        '''Create dictionary version of UserGroup, used in GroupFormResponse'''
+        return {"members": self.ids, "topics": self.attr["topics"], "type": "Mock Interview"}
+
     @staticmethod
     def reset():
         '''Reset the unique id set to an empty if needed'''
@@ -122,13 +127,20 @@ def convert_to_usergroup(packet):
         topics (List(String)): A list of topics strings, we give these numeric weights
     }
     '''
+    # Slack Conversion Key
+    difficulties = {"dif-hard": 3, "dif-medium": 2, "dif-easy": 1, "dif-any": 0}
+    meeting_sizes = {"siz-small": 2, "siz-medium": 3, "siz-large": 4, "siz-any": 0}
+    topic_list = {"top-array": "array", "top-string": "string", "top-sorting": "sorting",
+                  "top-tree": "tree", "top-greedy": "greedy", "top-stack": "stack",
+                  "top-recursion": "recursion", "top-math": "math", "top-geometry": "geometry",
+                  "top-divide_and_conquer": "divide-and-conquer", "top-any": "any"}
     # Get basic packet content
     id = packet["slack_id"]
-    diff = int(packet["difficulty"])
-    sz = int(packet["meeting_size"])
+    diff = int(difficulties[packet["difficulty"]])
+    sz = int(meeting_sizes[packet["meeting_size"]])
     # Create the topic dictionary, topics have weight 1 / size of the topic list
     ls = dict()
     ls_size = len(packet["topics"])
     for topic in packet["topics"]:
-        ls[topic] = 1 / ls_size
+        ls[topic_list[topic]] = 1 / ls_size
     return UserGroup(id, {"difficulty":diff, "meeting_size":sz, "topics":ls})
