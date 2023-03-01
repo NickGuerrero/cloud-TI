@@ -1,5 +1,6 @@
 """
 Template for notifying users of the group that they're part of
+TODO: Modify this so that it accepts a UserGroup object instead
 """
 
 def generate_response(group_form):

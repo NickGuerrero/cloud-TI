@@ -41,15 +41,16 @@ def event_test(body, say):
 '''
 @app.view("group_view")
 def handle_submission(ack, body, client, view, logger):
-    # Collect form data
-    group_dict = dict()
-    group_dict["slack_id"] = body["user"]["id"]
-    group_dict["meeting_type"] = view["state"]["values"]["meet_type"]["meet_type_value"]
-    group_dict["meeting_size"] = view["state"]["values"]["meet_size"]["meet_size_value"]
-    group_dict["group_type"] = view["state"]["values"]["group_type"]["group_type_value"]
-    group_dict["topic"] = view["state"]["values"]["topic_type"]["topic_type_value"]
-
     ack()
+    # Create packet from the form data
+    group_dict = dict()
+    group_dict["header"] = "user_queue_request"
+    group_dict["secret"] = "PASSWORD"
+    group_dict["slack_id"] = body["user"]["id"]
+    group_dict["difficulty"] = view["state"]["values"]["meet_size"]["meet_size_value"]['selected_option']['value']
+    group_dict["meeting_size"] = view["state"]["values"]["problem_difficulty"]["problem_difficulty_value"]['selected_option']['value']
+    group_dict["topics"] = [x['value'] for x in view["state"]["values"]["topic_selection"]["topic_list_value"]['selected_options']]
+
     # Send data to queue and acknowledge
     try:
         HOST = 'group-queue'              # Localhost
@@ -63,7 +64,6 @@ def handle_submission(ack, body, client, view, logger):
             client.chat_postMessage(channel=group_dict["slack_id"], text="Something went wrong, please report this issue to @NicolasGuerrero")
     except Exception as e:
         logger.exception(f"Failed to post a message {e}")
-    # return group_dict
 
 @app.event("app_home_opened")
 def update_home_tab(client, event, logger):
