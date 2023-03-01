@@ -61,7 +61,7 @@ def listener_thread(receiver, user_req_queue: Queue):
 # Thread B: Cron jobs, prevent listener from getting backed up
 def worker_thread(user_req_queue: Queue, timer=TIMER):
     logger.info("Cron job thread started")
-    UserGroup.reset() # Ensure that the UserGroup user list is clean for a new run
+    UserGroup.UserGroup.reset() # Ensure that the UserGroup user list is clean for a new run
     groups_waiting = deque(maxlen=300)
     while True:
         start_time = time.time()
