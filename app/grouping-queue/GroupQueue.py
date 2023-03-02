@@ -21,6 +21,7 @@ from slack_sdk.errors import SlackApiError
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 # Logging
+# TODO: Determine why the logs are no longer being written to a file
 dt = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
 logging.basicConfig(filename="listener-queue-" + dt + ".log", level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,6 +60,7 @@ def listener_thread(receiver, user_req_queue: Queue):
                 conn.send(-1)
 
 # Thread B: Cron jobs, prevent listener from getting backed up
+# TODO: Illegitmate packets will crash this thread, you should add safeguards
 def worker_thread(user_req_queue: Queue, timer=TIMER):
     logger.info("Cron job thread started")
     UserGroup.UserGroup.reset() # Ensure that the UserGroup user list is clean for a new run
@@ -125,77 +127,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-############################################################
-# Old Code Below, leaving here as reference during the re-write
-'''
-MAX_TIME_LIMIT = 100
-while True:
-    logger.info("Starting polling cycle")
-    try:
-        # Open queue and polling session on first request
-        queue = Queue()
-        conn = listener.accept()
-        msg = conn.recv()
-        if not is_user_request(msg) or is_command(msg): raise Exception("Invalid message recieved")
-        if is_user_request(msg):
-            queue.put(msg)
-            conn.send(1)
-        
-        # Thread A: Listener, only ends on command
-        def proc_a(receiver, q: Queue):
-            active = True
-            while active:
-                with receiver.accept() as conn:
-                    msg = conn.recv()
-                    if is_user_request(msg):
-                        q.put(msg)
-                        conn.send(1)
-                    elif is_command(msg):
-                        if msg["cmd"] == "stop":
-                            active = False
-                    else:
-                        conn.send(0)
-
-        # Thread B: Timer
-        def proc_b(t=TIMER):
-            time.sleep(t)
-            done = False
-            while not done:
-                with Client((HOST, PORT), authkey=b'password') as conn:
-                    conn.send({"cmd_secret": "password","cmd": "stop"})
-                    done = conn.recv()
-
-        # Threading implementation of above
-        logger.info("Starting Threading")
-        polling = threading.Thread(target=proc_a, args=(listener, queue))
-        timer = threading.Thread(target=proc_b, args=(TIMER,))
-        polling.start()
-        timer.start()
-        polling.join(MAX_TIME_LIMIT)
-        logger.info("Polling status after join:" + str(polling.is_alive()))
-        logger.info("Timer status after join:" + str(timer.is_alive()))
-        
-        # TODO: Check if we can message multiple students at once instead of one at a time
-        # TODO: Also check if that's viable or if it's too overwhelming
-        # After all requests received, return the results
-        tmp = [correct_form(queue.get()) for i in range(queue.qsize())]
-        logger.info("Queue after polling: " + str(tmp))
-        groups = SimpleGrouper.simple_group(tmp)
-        logger.info("Groupings: " + str(groups))
-        for group in groups:
-            mail = json.dumps(GroupFormResponse.generate_response(group)["blocks"])
-            for member in group["members"]:
-                try:
-                    result = client.conversations_open(token=os.environ.get("SLACK_BOT_TOKEN"), users=member)
-                    if result["ok"]:
-                        result = client.chat_postMessage(
-                            channel=result["channel"]["id"],
-                            blocks=mail
-                        )
-                except SlackApiError as e:
-                    logger.error(f"Error: {e}")
-
-    except Exception as e:
-        logger.error(e)
-'''
