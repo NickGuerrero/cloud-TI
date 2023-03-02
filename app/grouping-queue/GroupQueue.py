@@ -31,7 +31,7 @@ PORT = 4000
 # CHANGED FOR DEBUGGING
 TIMER = 15                      # Seconds to wait between cycles
 TIMEOUT_THRESHOLD = 12          # Number of cycles to wait before sending feedback to user
-SECRET = "password"
+SECRET = "PASSWORD"
 PACKET_CONTENT = ("slack_id", "difficulty", "meeting_size", "topics")
 
 # Determine how to prioritize attributes of the form. For example, a weight of
