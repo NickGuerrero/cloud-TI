@@ -47,8 +47,8 @@ def handle_submission(ack, body, client, view, logger):
     group_dict["header"] = "user_queue_request"
     group_dict["secret"] = "PASSWORD"
     group_dict["slack_id"] = body["user"]["id"]
-    group_dict["difficulty"] = view["state"]["values"]["meet_size"]["meet_size_value"]['selected_option']['value']
-    group_dict["meeting_size"] = view["state"]["values"]["problem_difficulty"]["problem_difficulty_value"]['selected_option']['value']
+    group_dict["meeting_size"] = view["state"]["values"]["meet_size"]["meet_size_value"]['selected_option']['value']
+    group_dict["difficulty"] = view["state"]["values"]["problem_difficulty"]["problem_difficulty_value"]['selected_option']['value']
     group_dict["topics"] = [x['value'] for x in view["state"]["values"]["topic_selection"]["topic_list_value"]['selected_options']]
 
     # Send data to queue and acknowledge
