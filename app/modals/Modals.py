@@ -344,7 +344,7 @@ def group_modal(ack, body, client):
                                     "type": "plain_text",
                                     "text": "Either is fine"
                                 },
-                                "value": "size-any"
+                                "value": "siz-any"
                             }
                         ],
                         "action_id": "meet_size_value"
