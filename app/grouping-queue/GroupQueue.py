@@ -72,7 +72,7 @@ def worker_thread(user_req_queue: Queue, timer=TIMER):
             while True:
                 try:
                     current_user = user_req_queue.get(block=False)
-                    users_waiting.append(QueueGrouper.user_to_groupable(current_user))
+                    users_waiting.append(UserGroup.convert_to_usergroup(current_user))
                 except UserGroup.DuplicateUserException:
                     logger.error("User " + current_user["slack_id"] + " is already in the queue")
         except EmptyQueue: pass
