@@ -115,6 +115,8 @@ def compare_groupable(user_x, user_y, weights):
         return 2000000 # Some arbitrarily high number
 
 # Convert packets into UserGroup objects (Moved here to make testing easier)
+# TODO: Check whether the difficulty dictionary is necessary for converting the packet values
+# You need to check the slack modal
 def convert_to_usergroup(packet):
     '''
     Converts a packet recieved from Slack into a UserGroup object for easy matching

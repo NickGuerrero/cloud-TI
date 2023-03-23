@@ -6,12 +6,13 @@ import math
 import heapq
 import sqlite3
 
-def resource_database(db_path, sql_script_path):
+def create_temporary_database(sql_script_path, db_path=":memory:"):
     '''
-    Create a fresh resource database, if one doesn't exist
+    Create a fresh resource database, default to a private in-memory
     Since there's no interface to update the database right now, it'll be
     recereated whenever changes are needed. The database should be able to persist
     between instance launches, and deleted when new data is needed.
+
     :param db_path: A filepath string to the database file (should be resource.db)
     :param sql_script_path: A filepath string to the sql script for making the database
     :return: sqlite3 connection object to the completed database
@@ -20,6 +21,7 @@ def resource_database(db_path, sql_script_path):
     sql_script = open(sql_script_path, 'r')
     sql_reader = sql_script.read()
     db_connection.executescript(sql_reader)
+    sql_script.close()
     return db_connection
 
 # Convert sql query into attribute dictionary objects
