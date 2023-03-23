@@ -58,7 +58,7 @@ def suggest_resource(db_connection, group_attr, PROBLEMS=3):
     # Convert group into values for queries + create the topic set
     query_difficulty = math.ceil(group_attr["difficulty"] - 0.5) # Round half-down to integer
     query_difficulty = max(1, min(3, query_difficulty)) # Ensure integer is between difficulty interval
-    query_topic = max(group_attr["topics"])
+    query_topic = max(group_attr["topics"]) if len(group_attr["topics"]) > 0 else None
     group_topics = set(group_attr["topics"].keys())
     group_topics.add("any") # Make sure that we won't have 0 denominator
 
@@ -84,8 +84,9 @@ def suggest_resource(db_connection, group_attr, PROBLEMS=3):
     NATURAL JOIN taggings NATURAL JOIN tags
     """
     tag_query = re.sub(r'\s+', ' ', tag_query).strip()
-    tag_list = create_problem_set(cur.execute(tag_query, (query_topic,)))
-    diff_list.extend(tag_list)
+    if query_topic is not None:
+        tag_list = create_problem_set(cur.execute(tag_query, (query_topic,)))
+        diff_list.extend(tag_list)
 
     # Rank the problems, comparing to the group attributes
     problem_list = []       # Min-heap for ranking the problem choices
