@@ -1,0 +1,2 @@
+# SQL scripts go here
+Since the database isn't large enough to require a separate machine, this folder exists to store scripts. For privacy reasons, the database won't be available on GitHub. When building the project on other machines, be sure to place the appropriate SQL scripts. In an ideal future, the database will be run on a separate machine rather than a sub-process of the main application, making this irrelevant.
