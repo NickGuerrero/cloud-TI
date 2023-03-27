@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 HOST = "group-queue"
 PORT = 4000
 # Path to SQL scripts for constructing a temporary database
-DATABASE_PATH = "/sql/resource_database.sql"
+DATABASE_PATH = "/app/sql/resource_database.sql"
 # CHANGED FOR DEBUGGING
 TIMER = 15                      # Seconds to wait between cycles
 TIMEOUT_THRESHOLD = 12          # Number of cycles to wait before sending feedback to user
@@ -62,10 +62,13 @@ def listener_thread(receiver, user_req_queue: Queue):
 
 # Thread B: Cron jobs, prevent listener from getting backed up
 # TODO: Illegitmate packets will crash this thread, you should add safeguards
-def worker_thread(user_req_queue: Queue, db_conn, timer=TIMER):
+def worker_thread(user_req_queue: Queue, db_path, timer=TIMER):
     logger.info("Cron job thread started")
+    # Set up the grouping queue
     UserGroup.UserGroup.reset() # Ensure that the UserGroup user list is clean for a new run
     groups_waiting = deque(maxlen=300)
+    # Instantiate a temporary database for managing resources
+    db_conn = ResourceFinder.create_temporary_database(db_path)
     while True:
         start_time = time.time()
         # Check for new users TODO: Make this cleaner, only one try block should be necessary
@@ -121,11 +124,9 @@ def main():
     # Create a server to handle user requests
     listener = Listener((HOST, PORT), authkey=b'password')
     incoming_users = Queue(maxsize=100) # Process incoming requests, 100 is a safe cap
-    # Instantiate a temporary database for managing resources
-    db_conn = ResourceFinder.create_temporary_database(DATABASE_PATH)
     # Start threads
     request_accepter = threading.Thread(target=listener_thread, args=(listener, incoming_users))
-    cron_jobs = threading.Thread(target=worker_thread, args=(incoming_users, db_conn, TIMER))
+    cron_jobs = threading.Thread(target=worker_thread, args=(incoming_users, DATABASE_PATH, TIMER))
     request_accepter.start()
     cron_jobs.start()
     request_accepter.join()
