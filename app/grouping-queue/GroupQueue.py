@@ -1,5 +1,4 @@
-from utils import SimpleGrouper
-from utils import QueueGrouper, UserGroup
+from utils import QueueGrouper, UserGroup, ResourceFinder
 from modals import GroupFormResponse
 
 from multiprocessing import Process, Queue
@@ -29,6 +28,8 @@ logger = logging.getLogger(__name__)
 # Assume the event listener and queue are on the same Docker instance
 HOST = "group-queue"
 PORT = 4000
+# Path to SQL scripts for constructing a temporary database
+DATABASE_PATH = "/sql/resource_database.sql"
 # CHANGED FOR DEBUGGING
 TIMER = 15                      # Seconds to wait between cycles
 TIMEOUT_THRESHOLD = 12          # Number of cycles to wait before sending feedback to user
@@ -61,7 +62,7 @@ def listener_thread(receiver, user_req_queue: Queue):
 
 # Thread B: Cron jobs, prevent listener from getting backed up
 # TODO: Illegitmate packets will crash this thread, you should add safeguards
-def worker_thread(user_req_queue: Queue, timer=TIMER):
+def worker_thread(user_req_queue: Queue, db_conn, timer=TIMER):
     logger.info("Cron job thread started")
     UserGroup.UserGroup.reset() # Ensure that the UserGroup user list is clean for a new run
     groups_waiting = deque(maxlen=300)
@@ -95,7 +96,9 @@ def worker_thread(user_req_queue: Queue, timer=TIMER):
         # Message groups on the exit queue (Single id means timeout, multiple people mean group matched)
         logger.info("Sending messages to expired groups")
         for group in exit_queue:
-            mail = json.dumps(GroupFormResponse.generate_response(group.to_group_form())["blocks"])
+            # Suggest resources for each group from the db_conn
+            res_list = ResourceFinder.suggest_resource(db_conn, {"difficulty": group.attr["difficulty"], "topics": group.attr["topics"]})
+            mail = json.dumps(GroupFormResponse.generate_response(group.to_group_form(), resources=res_list)["blocks"]) #TODO Add resources here
             try:
                 result = client.conversations_open(token=os.environ.get("SLACK_BOT_TOKEN"), users=",".join(group.ids))
                 if result["ok"]:
@@ -118,9 +121,11 @@ def main():
     # Create a server to handle user requests
     listener = Listener((HOST, PORT), authkey=b'password')
     incoming_users = Queue(maxsize=100) # Process incoming requests, 100 is a safe cap
+    # Instantiate a temporary database for managing resources
+    db_conn = ResourceFinder.create_temporary_database(DATABASE_PATH)
     # Start threads
     request_accepter = threading.Thread(target=listener_thread, args=(listener, incoming_users))
-    cron_jobs = threading.Thread(target=worker_thread, args=(incoming_users, TIMER))
+    cron_jobs = threading.Thread(target=worker_thread, args=(incoming_users, db_conn, TIMER))
     request_accepter.start()
     cron_jobs.start()
     request_accepter.join()

@@ -22,8 +22,8 @@ class TestGroupingBasic(unittest.TestCase):
     def test_basic(self):
         '''Test that the grouping function can merge two users together'''
         UserGroup.UserGroup.reset()
-        x = UserGroup.convert_to_usergroup(dummyreq("a", "1", "2", ["m", "n"]))
-        y = UserGroup.convert_to_usergroup(dummyreq("b", "1", "2", ["m", "n"]))
+        x = UserGroup.convert_to_usergroup(dummyreq("a", "dif-easy", "siz-small", ["top-string", "top-array"]))
+        y = UserGroup.convert_to_usergroup(dummyreq("b", "dif-easy", "siz-small", ["top-string", "top-array"]))
         user_queue = deque([x,y])
         group_queue = deque()
         # Test that users were added to the group queue properly
@@ -39,14 +39,14 @@ class TestGroupingBasic(unittest.TestCase):
             assert i in group_queue[0].ids
         self.assertTrue(group_queue[0].attr["difficulty"] == 1)
         self.assertTrue(group_queue[0].attr["meeting_size"] == 2)
-        self.assertTrue(group_queue[0].attr["topics"]["m"] == 0.5)
-        self.assertTrue(group_queue[0].attr["topics"]["n"] == 0.5)
+        self.assertAlmostEqual(group_queue[0].attr["topics"]["string"], 0.5, delta=0.0001)
+        self.assertAlmostEqual(group_queue[0].attr["topics"]["array"], 0.5, delta=0.0001)
 
     def test_basic_mismatch(self):
         '''Test that the grouping function can refuse to merge two users together'''
         UserGroup.UserGroup.reset()
-        x = UserGroup.convert_to_usergroup(dummyreq("a", "1", "2", ["m", "n"]))
-        y = UserGroup.convert_to_usergroup(dummyreq("b", "3", "4", ["p", "q"]))
+        x = UserGroup.convert_to_usergroup(dummyreq("a", "dif-easy", "siz-small", ["top-string", "top-array"]))
+        y = UserGroup.convert_to_usergroup(dummyreq("b", "dif-hard", "siz-large", ["top-tree", "top-recursion"]))
         user_queue = deque([x,y])
         group_queue = deque()
         # Test that users were added to the group queue properly
@@ -60,9 +60,9 @@ class TestGroupingBasic(unittest.TestCase):
     def test_match_forgiveness(self):
         '''Test that the grouping function can refuse to merge two users together'''
         UserGroup.UserGroup.reset()
-        x = UserGroup.convert_to_usergroup(dummyreq("a", "1", "2", ["m", "n"]))
-        y = UserGroup.convert_to_usergroup(dummyreq("b", "3", "4", ["p", "q"]))
-        z = UserGroup.convert_to_usergroup(dummyreq("c", "2", "3", ["s", "t"]))
+        x = UserGroup.convert_to_usergroup(dummyreq("a", "dif-easy", "siz-small", ["top-string", "top-array"]))
+        y = UserGroup.convert_to_usergroup(dummyreq("b", "dif-hard", "siz-large", ["top-recursion", "top-tree"]))
+        z = UserGroup.convert_to_usergroup(dummyreq("c", "dif-medium", "siz-medium", ["top-stack", "top-math"]))
         user_queue = deque([x,y,z])
         group_queue = deque()
         # Test that users were added to the group queue properly

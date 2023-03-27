@@ -5,3 +5,6 @@
 
 # Development artifacts
 __pycache__
+
+# SQL scripts
+resource_database.sql
