@@ -8,3 +8,6 @@ __pycache__
 
 # SQL scripts
 resource_database.sql
+
+# Debug logs
+debug.log
