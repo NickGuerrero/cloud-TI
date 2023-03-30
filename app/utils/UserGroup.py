@@ -65,7 +65,7 @@ class UserGroup:
     # TODO: Consider streamlining this process so we don't have to adapt to old code
     def to_group_form(self):
         '''Create dictionary version of UserGroup, used in GroupFormResponse'''
-        return {"members": self.ids, "topics": self.attr["topics"], "type": "Mock Interview"}
+        return {"members": self.ids, "topics": self.attr["topics"], "meeting_type": "Mock Interview"}
 
     @staticmethod
     def reset():
