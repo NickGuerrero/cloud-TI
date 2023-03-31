@@ -1,3 +1,13 @@
+# Important credential and environment files
 .env
 .env.personal
 *.pem
+
+# Development artifacts
+__pycache__
+
+# SQL scripts
+resource_database.sql
+
+# Debug logs
+debug.log

@@ -22,3 +22,5 @@ services:
         volumes:
             - ./app/utils:/app/utils:ro
             - ./app/modals:/app/modals:ro
+            - ./app/sql:/app/sql:ro
+            - ./app/logs:/app/logs

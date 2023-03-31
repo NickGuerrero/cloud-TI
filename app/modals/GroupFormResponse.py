@@ -1,14 +1,20 @@
 """
 Template for notifying users of the group that they're part of
+# TODO: Modify allowable group forms so that the site url base can be changed
 """
 
-def generate_response(group_form):
+def generate_response(group_form, resources=[]):
     """Convert the group dictionaries generated from the matching process into Slack message blocks
     :param group_form: A dictionary in the following format:
                     {
                         "meeting_type": String for the type of meeting,
                         "topics": List of strings for all topic tags
                         "members": List of slack ids for the members of a group
+                    }
+    :param resources: A list of dictionaries with resource attributes w/ at least the following
+                    {
+                        "title": String with the name of the resource,
+                        "link": String with link that redirects to external resource
                     }
     :return: A dictionary formatted into a Slack message block
     """
@@ -46,11 +52,20 @@ def generate_response(group_form):
             }
         ]
         # Append resource links here
+        for res in resources:
+            blocks.append(link_block(res["title"], res["link"]))
     return {"blocks": blocks}
 
-def link_block(title, description, link):
-    """I'm separating this as a function in case we want to change how links are presented"""
-    s = "{}: {}\n{}".format(title, description, link)
+def link_block(title, link, res_base="https://leetcode.com"):
+    """Create a slack block for presenting resource links
+    :param title: String that explains where the URL is going to
+    :param link: String with the URL sub-directory/extension
+    :paran res_base: String with the URL up to the top-level scheme
+
+    Note that link and res_base were initially split to save space in the database
+    since all links would re-direct to 1 website, with different extensions
+    """
+    s = "{}: {}".format(title, res_base + link)
     block = {
 			"type": "section",
 			"text": {

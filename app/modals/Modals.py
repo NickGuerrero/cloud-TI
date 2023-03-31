@@ -280,7 +280,7 @@ def group_modal(ack, body, client):
             "callback_id": "group_view",
             "title": {
                 "type": "plain_text",
-                "text": "Group Finder",
+                "text": "Mock Interview Finder"
             },
             "submit": {
                 "type": "plain_text",
@@ -310,123 +310,6 @@ def group_modal(ack, body, client):
                 },
                 {
                     "type": "input",
-                    "block_id": "meet_type",
-                    "element": {
-                        "type": "static_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Select an item"
-                        },
-                        "options": [
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Mock Interview"
-                                },
-                                "value": "type-mock"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Resume Review"
-                                },
-                                "value": "type-resume"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Group Problem Solving"
-                                },
-                                "value": "type-solve"
-                            }
-                        ],
-                        "action_id": "meet_type_value"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "Select A Meeting Type"
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "topic_type",
-                    "element": {
-                        "type": "static_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Select an item"
-                        },
-                        "options": [
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Data Types*"
-                                },
-                                "value": "topic-data"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Loops"
-                                },
-                                "value": "topic-loops"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Arrays"
-                                },
-                                "value": "topic-arrays"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Algorithms"
-                                },
-                                "value": "topic-algorithms"
-                            }
-                        ],
-                        "action_id": "topic_type_value"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "Pick a Topic to Focus On"
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "group_type",
-                    "element": {
-                        "type": "static_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Select an item"
-                        },
-                        "options": [
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Dynamic (New students may join during session)"
-                                },
-                                "value": "group-dynamic"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Fixed (Same members from start to end of session)"
-                                },
-                                "value": "group-fixed"
-                            }
-                        ],
-                        "action_id": "group_type_value"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "Select a Group Type"
-                    }
-                },
-                {
-                    "type": "input",
                     "block_id": "meet_size",
                     "element": {
                         "type": "static_select",
@@ -438,37 +321,178 @@ def group_modal(ack, body, client):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "2"
+                                    "text": "Pair (2 people)"
                                 },
-                                "value": "size-2"
+                                "value": "siz-small"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "3"
+                                    "text": "Trio (3 people)"
                                 },
-                                "value": "size-3"
+                                "value": "siz-medium"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "4"
+                                    "text": "Squad (4 people)"
                                 },
-                                "value": "size-4"
+                                "value": "siz-large"
                             },
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "Surprise Me"
+                                    "text": "Either is fine"
                                 },
-                                "value": "size-any"
+                                "value": "siz-any"
                             }
                         ],
                         "action_id": "meet_size_value"
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "Select a Group Size"
+                        "text": "Ideal Group Size"
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "problem_difficulty",
+                    "element": {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select an item"
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Easy"
+                                },
+                                "value": "dif-easy"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Medium"
+                                },
+                                "value": "dif-medium"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Hard"
+                                },
+                                "value": "dif-hard"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Any will do"
+                                },
+                                "value": "dif-any"
+                            }
+                        ],
+                        "action_id": "problem_difficulty_value"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Ideal Problem Difficulty"
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "topic_selection",
+                    "element": {
+                        "type": "multi_static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select topics",
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Array",
+                                },
+                                "value": "top-array"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "String",
+                                },
+                                "value": "top-string"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Sorting",
+                                },
+                                "value": "top-sorting"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Tree",
+                                },
+                                "value": "top-tree"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Greedy",
+                                },
+                                "value": "top-greedy"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Stack",
+                                },
+                                "value": "top-stack"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Recursion",
+                                },
+                                "value": "top-recursion"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Math",
+                                },
+                                "value": "top-math"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Geometry",
+                                },
+                                "value": "top-geometry"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Divide and Conquer",
+                                },
+                                "value": "top-divide_and_conquer"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Surprise Me",
+                                },
+                                "value": "top-any"
+                            }
+                        ],
+                        "action_id": "topic_list_value"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Topic Suggestions",
                     }
                 }
             ]
