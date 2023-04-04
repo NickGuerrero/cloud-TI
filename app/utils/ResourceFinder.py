@@ -1,6 +1,3 @@
-# Given sql instructions, create a TEMPORARY database w/ sqlite3
-# Given tags and a difficulty, pull a set of n problems from the database that would match the suggestions
-
 import re
 import math
 import heapq
@@ -24,12 +21,22 @@ def create_temporary_database(sql_script_path, db_path=":memory:"):
     sql_script.close()
     return db_connection
 
-# Convert sql query into attribute dictionary objects
-# Problem table has natural join from taggings then tags
-# Expected row placements: (pid, link, title, difficulty, tid, tag_name)
 def create_problem_set(res):
+    '''
+    Fetch rows from a query result and return them as dictionaries w/ the following
+    {
+        "link": External link to the problem/resource
+        "title": Title of the resource/problem
+        "difficulty": Numeric difficulty rating (1 for easy, 2 for medium, 3 for hard)
+        "tags": Set of strings, each representing a unique tag associated with the problem
+    }
+    Expected row placements from query result: (pid, link, title, difficulty, tid, tag_name)
+
+    :return: A list of dictionaries with the above format
+    '''
     sql_listing = res.fetchall()
     output = {}
+    # Condense the entry tags (from the natural join with the tag table)
     for entry in sql_listing:
         if entry in output:
             output[entry[1]]["tags"].add(str(entry[5]))

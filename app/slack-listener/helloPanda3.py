@@ -69,6 +69,7 @@ def handle_submission(ack, body, client, view, logger):
 def update_home_tab(client, event, logger):
     Modals.homepage(client, event, logger)
 
+# Temporarily removed from the homepage
 @app.action("resource-button")
 def open_resource_modal(ack, body, client):
     Modals.resource_modal(ack, body, client)

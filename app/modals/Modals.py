@@ -89,30 +89,14 @@ def homepage(client, event, logger):
                         "type": "header",
                         "text": {
                             "type": "plain_text",
-                            "text": "Personalized Functionalities"
+                            "text": "Special Features"
                         }
                     },
                     {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "Homework/General Coding Assistance"
-                        },
-                        "accessory": {
-                            "type": "button",
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Find Resources"
-                            },
-                            "value": "click_me_1234",
-                            "action_id": "resource-button"
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "Mock Interview/Resume Workshopping"
+                            "text": "Schedule a Mock Interview"
                         },
                         "accessory": {
                             "type": "button",
@@ -133,6 +117,25 @@ def homepage(client, event, logger):
     except Exception as e:
         logger.error(f"Error publishing home tab: {e}")
 
+'''
+Removed resource button, will be re-added if the featue is ever re-implemented
+{
+    "type": "section",
+    "text": {
+        "type": "mrkdwn",
+        "text": "Homework/General Coding Assistance"
+    },
+    "accessory": {
+        "type": "button",
+        "text": {
+            "type": "plain_text",
+            "text": "Find Resources"
+        },
+        "value": "click_me_1234",
+        "action_id": "resource-button"
+    }
+},
+'''
 
 def resource_modal(ack, body, client):
     ack()
