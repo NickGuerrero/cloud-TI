@@ -29,16 +29,6 @@ def event_test(body, say):
     else:
         say("Hello <@" + user_id + ">!")
 
-
-'''
-{
-"slack_id": String for user identification and messaging,
-"meeting_type": String for type of meeting (e.g. "Mock Interview"),
-"meeting_size": Int, either 2, 3, or 4, determining the size of the team,
-"topic": String representing the topic meeting
-"group_type": String for determining if group is static or dynamic
-}
-'''
 @app.view("group_view")
 def handle_submission(ack, body, client, view, logger):
     ack()
@@ -69,6 +59,7 @@ def handle_submission(ack, body, client, view, logger):
 def update_home_tab(client, event, logger):
     Modals.homepage(client, event, logger)
 
+# Temporarily removed from the homepage
 @app.action("resource-button")
 def open_resource_modal(ack, body, client):
     Modals.resource_modal(ack, body, client)
