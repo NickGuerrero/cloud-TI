@@ -1,2 +1,2 @@
 # Log files go here
-Logs are written to this folder to persist outside the Docker container. Currently, only debug.log is written here, but it will be replaced each time the application is run to avoid wasting space on the host machine.
+Logs are written to this folder to persist outside the Docker container. Currently, only *debug.log* is written here, but it will be replaced each time the application is run to avoid wasting space on the host machine.
