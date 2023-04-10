@@ -57,7 +57,12 @@ def handle_submission(ack, body, client, view, logger):
 
 @app.event("app_home_opened")
 def update_home_tab(client, event, logger):
-    Modals.homepage(client, event, logger)
+    urls = {
+        "STUDENT_HANDBOOK_LINK": os.environ['STUDENT_HANDBOOK_LINK'],
+        "CANVAS_LINK": os.environ['CANVAS_LINK'],
+        "DEEP_WORK_SESSION_LINK": os.environ['DEEP_WORK_SESSION_LINK']
+    }
+    Modals.homepage(client, event, logger, links=urls)
 
 # Temporarily removed from the homepage
 @app.action("resource-button")
