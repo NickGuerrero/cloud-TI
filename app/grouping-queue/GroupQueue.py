@@ -82,6 +82,9 @@ def worker_thread(user_req_queue: Queue, db_path, timer=TIMER):
                 except UserGroup.DuplicateUserException:
                     logger.error("User " + current_user["slack_id"] + " is already in the queue")
                     # TODO: Return a message back to the client
+                except UserGroup.UserConversionFailedException:
+                    logger.error("User " + current_user["slack_id"] + "sent an invalid packet")
+                    # TODO: Return a message back to the client
         except EmptyQueue: pass
         
         # Match users and increase group timeout
@@ -104,14 +107,19 @@ def worker_thread(user_req_queue: Queue, db_path, timer=TIMER):
         logger.debug("Sending messages to expired groups")
         for group in exit_queue:
             # Suggest resources for each group from the db_conn
-            res_list = ResourceFinder.suggest_resource(db_conn, {"difficulty": group.attr["difficulty"], "topics": group.attr["topics"]})
-            mail = json.dumps(GroupFormResponse.generate_response(group.to_group_form(), resources=res_list)["blocks"]) #TODO Add resources here
+            try:
+                res_list = ResourceFinder.suggest_resource(db_conn, {"difficulty": group.attr["difficulty"], "topics": group.attr["topics"]})
+            except Exception as e:
+                logger.error(f"Resource Finder failed: {e}")
+                res_list = []
+            mail = json.dumps(GroupFormResponse.generate_response(group.to_group_form(), resources=res_list)["blocks"])
             try:
                 result = client.conversations_open(token=os.environ.get("SLACK_BOT_TOKEN"), users=",".join(group.ids))
                 if result["ok"]:
                     result = client.chat_postMessage(
                         channel=result["channel"]["id"],
-                        blocks=mail
+                        blocks=mail,
+                        text="CTI App sent you a message"
                     )
             except SlackApiError as e:
                 logger.error(f"Error: {e}")

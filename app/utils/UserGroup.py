@@ -3,6 +3,9 @@ from copy import deepcopy
 class DuplicateUserException(Exception):
     pass
 
+class UserConversionFailedException(Exception):
+    pass
+
 class UserGroup:
     '''
     UserGroup: Represents users and group when forming groups together
@@ -135,13 +138,16 @@ def convert_to_usergroup(packet):
                   "top-tree": "tree", "top-greedy": "greedy", "top-stack": "stack",
                   "top-recursion": "recursion", "top-math": "math", "top-geometry": "geometry",
                   "top-divide_and_conquer": "divide-and-conquer", "top-any": "any"}
-    # Get basic packet content
-    id = packet["slack_id"]
-    diff = int(difficulties[packet["difficulty"]])
-    sz = int(meeting_sizes[packet["meeting_size"]])
-    # Create the topic dictionary, topics have weight 1 / size of the topic list
-    ls = dict()
-    ls_size = len(packet["topics"])
-    for topic in packet["topics"]:
-        ls[topic_list[topic]] = 1 / ls_size
-    return UserGroup(id, {"difficulty":diff, "meeting_size":sz, "topics":ls})
+    try:
+        # Get basic packet content
+        id = packet["slack_id"]
+        diff = int(difficulties[packet["difficulty"]])
+        sz = int(meeting_sizes[packet["meeting_size"]])
+        # Create the topic dictionary, topics have weight 1 / size of the topic list
+        ls = dict()
+        ls_size = len(packet["topics"])
+        for topic in packet["topics"]:
+            ls[topic_list[topic]] = 1 / ls_size
+        return UserGroup(id, {"difficulty":diff, "meeting_size":sz, "topics":ls})
+    except:
+        raise UserConversionFailedException("User packet could not be converted correctly")
