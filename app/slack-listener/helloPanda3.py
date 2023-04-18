@@ -43,13 +43,15 @@ def handle_submission(ack, body, client, view, logger):
 
     # Send data to queue and acknowledge
     try:
-        HOST = 'group-queue'              # Localhost
+        HOST = 'group-queue'            # Localhost
         PORT = 4000                     # Port location of other program
         with Client((HOST, PORT), authkey=b'password') as conn:
             conn.send(group_dict)
             response = conn.recv()
         if response > 0:
-            client.chat_postMessage(channel=group_dict["slack_id"], text="You will be placed in a group shortly")
+            m = "You will be placed in a group shortly. If this is your first time, please read our quick guide for getting started: "
+            m += os.environ["MOCK_INTERVIEW_QUICK_GUIDE"]
+            client.chat_postMessage(channel=group_dict["slack_id"], text=m)
         else:
             client.chat_postMessage(channel=group_dict["slack_id"], text="Something went wrong, please report this issue to @NicolasGuerrero")
     except Exception as e:
