@@ -19,7 +19,7 @@ from slack_sdk.errors import SlackApiError
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 # Logging: Logs are placed in app/logs, logs are NOT saved between runs
-logging.basicConfig(filename="/app/logs/debug.log", level=logging.INFO)
+logging.basicConfig(filename="/app/logs/debug.log", filemode="w", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Host and Port pair for hosting the listener queue
