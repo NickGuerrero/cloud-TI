@@ -2,7 +2,7 @@ from slack_bolt import App
 
 # Creates home app
 # must subscribe to app_home_opened event
-def homepage(client, event, logger):
+def homepage(client, event, logger, links={}):
     try:
         client.views_publish(
             # Use the user ID associated with the event
@@ -42,7 +42,7 @@ def homepage(client, event, logger):
                                 "emoji": True
                             },
                             "value": "click_me_1",
-                            "url": "https://bit.ly/Accelerate-Student-Handbook",
+                            "url": links["STUDENT_HANDBOOK_LINK"],
                             "action_id": "button-action"
                         }
                     },
@@ -60,7 +60,7 @@ def homepage(client, event, logger):
                                 "emoji": True
                             },
                             "value": "click_me_2",
-                            "url": "https://cti-courses.instructure.com/",
+                            "url": links["CANVAS_LINK"],
                             "action_id": "button-action"
                         }
                     },
@@ -78,7 +78,7 @@ def homepage(client, event, logger):
                                 "emoji": True
                             },
                             "value": "click_me_3",
-                            "url": "https://docs.google.com/spreadsheets/d/1C8FLUGrIDRXRkBgvDsNOmqwcW4go4QwfNOxoytjDvEk/edit#gid=0",
+                            "url": links["DEEP_WORK_SESSION_LINK"],
                             "action_id": "button-action"
                         }
                     },
