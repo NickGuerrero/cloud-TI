@@ -58,6 +58,12 @@ def suggest_resource(db_connection, group_attr, PROBLEMS=3):
         }
     :param PROBLEMS: The number of problems to fetch, max 10
     :return: A list of diciontaries containing problem attributes
+        {
+            "link": External link to the problem/resource
+            "title": Title of the resource/problem
+            "difficulty": Numeric difficulty rating (1 for easy, 2 for medium, 3 for hard)
+            "tags": Set of strings, each representing a unique tag associated with the problem
+        }
     '''
     # DB Connection
     cur = db_connection.cursor()
@@ -109,6 +115,7 @@ def suggest_resource(db_connection, group_attr, PROBLEMS=3):
             while cur_error in value_set:
                 cur_error += DELTA
             value_set.add(cur_error)
+            name_set.add(prob["link"])
             heapq.heappush(problem_list, (cur_error, prob))
     # Remove the ranking number, the output is just the problem data
     return [x[1] for x in heapq.nsmallest(PROBLEMS, problem_list)]
