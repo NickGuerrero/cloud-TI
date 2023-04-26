@@ -128,6 +128,29 @@ class TestGroupingBasic(unittest.TestCase):
         for grp in exit_queue:
             print(grp.ids)
         print(len(exit_queue))
+    
+    def test_many_users_singlelargequeue(self):
+        UserGroup.UserGroup.reset()
+        # Generate 100 users on command
+        users = (UserGroup.convert_to_usergroup(dummyreq(
+            str(x), diff_options[x % 3], size_options[((x // 3) % 3)], [topic_options[x % 10]])
+            ) for x in range(100))
+        user_queue = deque(users)
+        group_queue = deque()
+        exit_queue = deque()
+        for i in range(24):
+            QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=3) # MT = 4
+            # Simulate the grouper driver that handles timeout
+            update_queue_timeout(group_queue, exit_queue)
+        # Check the number of successful group matches
+        fail = 0
+        for grp in exit_queue:
+            fail += (len(grp.ids) <= 1)
+        self.assertTrue(fail < 10)
+        # Checking group formations
+        for grp in exit_queue:
+            print(grp.ids)
+        print(len(exit_queue))
 
 if __name__ == "__main__":
     unittest.main()
