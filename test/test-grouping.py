@@ -12,11 +12,30 @@ from utils import UserGroup, QueueGrouper
 from collections import deque
 import unittest
 
+# Creating dummy requests
 def dummyreq(id_no, diff, meet_size, topic):
     return {"slack_id": id_no, "difficulty": diff, "meeting_size": meet_size, "topics": topic}
+# Tag listings useful for using UserGroup Conversion
+topic_options = ["top-array", "top-string", "top-sorting", "top-tree", "top-greedy", "top-stack",
+                  "top-recursion", "top-math", "top-geometry", "top-divide_and_conquer", "top-any"]
+diff_options = ["dif-easy", "dif-medium", "dif-hard"]
+size_options = ["siz-small", "siz-medium", "siz-large"]
+# Simulate the grouping queue timeout
+def update_queue_timeout(group_queue, exit_queue):
+    # Simulate the grouper driver that handles timeout
+    group_queue.append(None)
+    while group_queue[0] is not None:
+        if group_queue[0].timeout < 12:
+            group_queue[0].step()
+            group_queue.rotate(-1)
+        else:
+            group_queue[0].expire()
+            exit_queue.append(group_queue.popleft())
+    group_queue.popleft()
 
 # Constants
-WEIGHTS = {"meeting_size": 2, "difficulty": 3, "topics": 1}
+# TODO: In main application, consider using meeting_size = 3 or 4 to prevent quad only in dense queues (2, 3, 1)
+WEIGHTS = {"meeting_size": 6, "difficulty": 4, "topics": 1}
 
 class TestGroupingBasic(unittest.TestCase):
     def test_basic(self):
@@ -78,6 +97,37 @@ class TestGroupingBasic(unittest.TestCase):
         # Test for forgiveness, a should forgive c but not b
         QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=4)
         self.assertTrue(len(group_queue) == 2)
+    
+    # TODO: Consider changing weights to improve group performance, as well as compromise factor & match forgiveness
+    # This test is biased towards forgiveness (one-at-a-time), so it owuld be helpful to write tests to find balance
+    def test_many_users_1by1(self):
+        '''Test that the algorithm can handle at least 100 users'''
+        UserGroup.UserGroup.reset()
+        # Generate 100 users on command
+        users = (UserGroup.convert_to_usergroup(dummyreq(
+            str(x), diff_options[x % 3], size_options[((x // 3) % 3)], [topic_options[x % 10]])
+            ) for x in range(100))
+        user_queue = deque()
+        group_queue = deque()
+        exit_queue = deque()
+        for user in users:
+            user_queue.append(user)
+            QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=3) # MT = 4
+            # Simulate the grouper driver that handles timeout
+            update_queue_timeout(group_queue, exit_queue)
+        for i in range(12):
+            QueueGrouper.group_matcher(user_queue, group_queue, WEIGHTS, compromise_factor=2, match_threshold=3) # MT = 4
+            # Simulate the grouper driver that handles timeout
+            update_queue_timeout(group_queue, exit_queue)
+        # Check the number of successful group matches
+        fail = 0
+        for grp in exit_queue:
+            fail += (len(grp.ids) <= 1)
+        self.assertTrue(fail < 10)
+        # Checking group formations
+        for grp in exit_queue:
+            print(grp.ids)
+        print(len(exit_queue))
 
 if __name__ == "__main__":
     unittest.main()
