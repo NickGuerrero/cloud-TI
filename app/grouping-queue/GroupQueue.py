@@ -36,7 +36,7 @@ PACKET_CONTENT = ("slack_id", "difficulty", "meeting_size", "topics")
 
 # Determine how to prioritize attributes of the form. For example, a weight of
 # {"a": 1, "b": 2} means that b will factor twice as much as a
-WEIGHTS = {"meeting_size": 2, "difficulty": 3, "topics": 1}
+WEIGHTS = {"meeting_size": 6, "difficulty": 4, "topics": 1}
 
 # Thread A: Listen for server requests and handle immediate requests
 def listener_thread(receiver, user_req_queue: Queue):
@@ -89,7 +89,7 @@ def worker_thread(user_req_queue: Queue, db_path, timer=TIMER):
         
         # Match users and increase group timeout
         logger.debug("Matching groups together")
-        QueueGrouper.group_matcher(users_waiting, groups_waiting, WEIGHTS, compromise_factor=2, match_threshold=4)
+        QueueGrouper.group_matcher(users_waiting, groups_waiting, WEIGHTS, compromise_factor=4, match_threshold=0.22)
         
         # Increase timeout, remove groups if they passed their expiration date
         exit_queue = deque(maxlen=300)
