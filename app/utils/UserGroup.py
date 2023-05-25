@@ -109,7 +109,7 @@ def compare_groupable(user_x, user_y, weights):
             else:
                 # Assume the internal dictionary is Key => Numeric
                 error_score += weights[att] * (abs(user_x.attr[att] - user_y.attr[att]) if user_x.attr[att] * user_y.attr[att] != 0 else 0)
-        return error_score
+        return error_score / (sum(weights.values()) * 2)
     except AttributeError:
         # logger.error("Attribute mismatch when comparing " + str(user_x) + " and " + str(user_y))
         return 2000000 # Some arbitarily high number
